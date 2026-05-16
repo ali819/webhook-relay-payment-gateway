@@ -89,15 +89,34 @@ class RelayController extends Controller
 
         return match ($provider) {
             'midtrans' => $payload['custom_field1'] ?? null,
-            'xendit'   => $payload['metadata']['domain'] ?? null,
+            'xendit'   => $payload['data']['metadata']['domain']  // Payment Request V2/V3 ✓
+                        ?? $payload['metadata']['domain']        // QRIS lama
+                        ?? $this->parseFromExternalId($payload)  // FVA lama fallback
+                        ?? null,
         };
+    }
+
+    private function parseFromExternalId(array $payload): ?string
+    {
+        $externalId = $payload['data']['reference_id']
+                    ?? $payload['data']['external_id']
+                    ?? $payload['reference_id']
+                    ?? $payload['external_id']
+                    ?? null;
+
+        if (!$externalId || !str_contains($externalId, '|')) {
+            return null;
+        }
+
+        return explode('|', $externalId)[0];
     }
 
     private function extractEventType(array $payload, string $provider): ?string
     {
         return match ($provider) {
             'midtrans' => $payload['transaction_status'] ?? null,
-            'xendit'   => $payload['status'] ?? $payload['event'] ?? null,
+            'xendit'   => $payload['event']                        // Payment Request format
+                        ?? $payload['data']['status']             ?? null,
         };
     }
 }
