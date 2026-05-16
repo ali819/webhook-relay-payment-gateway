@@ -5,7 +5,12 @@ use App\Http\Controllers\Panel\DomainController;
 use App\Http\Controllers\Panel\LogController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn() => redirect()->route('login'));
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('panel.domains.index');
+    }
+    return redirect()->route('login');
+});
 
 Route::middleware(['guest', 'panel.enabled'])->group(function () {
     Route::get('/login', [LoginController::class, 'showForm'])->name('login');
