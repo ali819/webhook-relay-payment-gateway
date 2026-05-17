@@ -25,20 +25,27 @@ class DomainController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'       => 'required|string|max:255',
-            'domain'     => ['required', 'string', 'max:100', 'unique:domains,domain', 'regex:/^[a-z0-9\-\.]+$/'],
             'provider'   => 'required|in:midtrans,xendit',
             'target_url' => 'required|url',
-            'secret_key' => 'required|string',
+            'secret_key' => 'nullable|string',
         ]);
 
+        // Parse domain dari target_url
+        $parsed = parse_url($request->target_url);
+        $domain = $parsed['host'] ?? $request->target_url;
+
+        // Cek duplikat domain + provider
+        if (Domain::where('domain', $domain)->where('provider', $request->provider)->exists()) {
+            return back()->withErrors(['target_url' => 'Domain ini sudah terdaftar untuk provider ' . ucfirst($request->provider) . '.'])->withInput();
+        }
+
         Domain::create([
-            'name'       => $request->name,
-            'domain'     => $request->domain,
+            'name'       => $domain,
+            'domain'     => $domain,
             'provider'   => $request->provider,
             'target_url' => $request->target_url,
-            'secret_key' => $request->secret_key,
-            'is_active'  => $request->boolean('is_active', true),
+            'secret_key' => '-',
+            'is_active'  => $request->has('is_active'),
         ]);
 
         return redirect()->route('panel.domains.index')
@@ -53,20 +60,29 @@ class DomainController extends Controller
     public function update(Request $request, Domain $domain)
     {
         $request->validate([
-            'name'       => 'required|string|max:255',
-            'domain'     => ['required', 'string', 'max:100', Rule::unique('domains', 'domain')->ignore($domain->id), 'regex:/^[a-z0-9\-\.]+$/'],
             'provider'   => 'required|in:midtrans,xendit',
             'target_url' => 'required|url',
-            'secret_key' => 'required|string',
+            'secret_key' => 'nullable|string',
         ]);
 
+        $parsed    = parse_url($request->target_url);
+        $domainStr = $parsed['host'] ?? $request->target_url;
+
+        // Cek duplikat domain + provider (exclude diri sendiri)
+        if (Domain::where('domain', $domainStr)
+            ->where('provider', $request->provider)
+            ->where('id', '!=', $domain->id)
+            ->exists()) {
+            return back()->withErrors(['target_url' => 'Domain ini sudah terdaftar untuk provider ' . ucfirst($request->provider) . '.'])->withInput();
+        }
+
         $domain->update([
-            'name'       => $request->name,
-            'domain'     => $request->domain,
+            'name'       => $domainStr,
+            'domain'     => $domainStr,
             'provider'   => $request->provider,
             'target_url' => $request->target_url,
-            'secret_key' => $request->secret_key,
-            'is_active'  => $request->boolean('is_active'),
+            'secret_key' => '-',
+            'is_active'  => $request->has('is_active'),
         ]);
 
         return redirect()->route('panel.domains.index')

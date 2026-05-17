@@ -13,7 +13,6 @@
         <form action="{{ route('panel.domains.store') }}" method="POST" autocomplete="off">
             @csrf
 
-            {{-- Step 1: Provider --}}
             <div class="mb-4">
                 <label class="form-label fw-medium">Provider <span class="text-danger">*</span></label>
                 <select name="provider" id="provider" class="form-select @error('provider') is-invalid @enderror"
@@ -25,41 +24,17 @@
                 @error('provider') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
-            {{-- Fields muncul setelah pilih provider --}}
             <div id="form-fields" class="{{ old('provider') ? '' : 'd-none' }}">
 
                 <div class="mb-3">
-                    <label class="form-label fw-medium">Nama <span class="text-danger">*</span></label>
-                    <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                           value="{{ old('name') }}" placeholder="Contoh: Toko A">
-                    @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-medium">Domain <span class="text-danger">*</span></label>
-                    <input type="text" name="domain" id="domain"
-                        class="form-control @error('domain') is-invalid @enderror"
-                        value="{{ old('domain') }}" placeholder="contoh: domain.com">
-                    <div id="domain-hint" class="form-text"></div>
-                    @error('domain') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="mb-3">
                     <label class="form-label fw-medium">Target URL <span class="text-danger">*</span></label>
-                    <input type="url" name="target_url"
+                    <input type="url" name="target_url" id="target_url"
                            class="form-control @error('target_url') is-invalid @enderror"
                            value="{{ old('target_url') }}"
-                           placeholder="contoh: https://toko-a.com/webhook/payment">
+                           placeholder="https://toko-a.com/webhook/payment"
+                           oninput="previewDomain(this.value)">
+                    <div id="domain-preview" class="form-text"></div>
                     @error('target_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-medium" id="secret-label">Secret Key <span class="text-danger">*</span></label>
-                    <input type="text" name="secret_key" id="secret_key"
-                           class="form-control @error('secret_key') is-invalid @enderror"
-                           value="{{ old('secret_key') }}">
-                    <div id="secret-hint" class="form-text"></div>
-                    @error('secret_key') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="mb-4 form-check">
@@ -79,39 +54,29 @@
 </div>
 
 <script>
-const hints = {
-    midtrans: {
-        domain: 'Nilai ini diisi di <code>custom_field1</code> saat membuat transaksi Midtrans.',
-        secret: 'Server Key Midtrans — dipakai untuk validasi signature webhook.',
-        secretPlaceholder: 'SB-Mid-server-xxxxxxxxxxxxxxxx',
-    },
-    xendit: {
-        domain: 'Nilai ini diisi di <code>metadata.domain</code> saat membuat transaksi Xendit.',
-        secret: 'Callback Token Xendit — ada di Settings → Developers → Webhook.',
-        secretPlaceholder: 'xnd_xxxxxxxxxxxxxxxx',
-    },
-};
-
 function onProviderChange(val) {
     const fields = document.getElementById('form-fields');
-    const domainHint = document.getElementById('domain-hint'); // ← fix: slug-hint → domain-hint
-    const secretHint = document.getElementById('secret-hint');
-    const secretInput = document.getElementById('secret_key');
-
-    if (!val) {
-        fields.classList.add('d-none');
-        return;
-    }
-
+    if (!val) { fields.classList.add('d-none'); return; }
     fields.classList.remove('d-none');
-    domainHint.innerHTML = hints[val].domain; // ← fix: slug → domain
-    secretHint.innerHTML = hints[val].secret;
-    secretInput.placeholder = hints[val].secretPlaceholder;
+}
+
+function previewDomain(url) {
+    const preview = document.getElementById('domain-preview');
+    try {
+        const parsed = new URL(url);
+        preview.innerHTML = `Domain terdeteksi: <strong>${parsed.hostname}</strong>`;
+        preview.className = 'form-text text-success';
+    } catch {
+        preview.innerHTML = '';
+        preview.className = 'form-text';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     const val = document.getElementById('provider').value;
     if (val) onProviderChange(val);
+    const url = document.getElementById('target_url')?.value;
+    if (url) previewDomain(url);
 });
 </script>
 @endsection

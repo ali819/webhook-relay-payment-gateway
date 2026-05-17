@@ -15,49 +15,26 @@
 
             <div class="mb-4">
                 <label class="form-label fw-medium">Provider <span class="text-danger">*</span></label>
-                <select name="provider" id="provider" class="form-select"
-                        onchange="onProviderChange(this.value)">
+                <select name="provider" id="provider" class="form-select">
                     <option value="midtrans" {{ old('provider', $domain->provider) == 'midtrans' ? 'selected' : '' }}>Midtrans</option>
                     <option value="xendit"   {{ old('provider', $domain->provider) == 'xendit'   ? 'selected' : '' }}>Xendit</option>
                 </select>
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-medium">Nama <span class="text-danger">*</span></label>
-                <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                       value="{{ old('name', $domain->name) }}">
-                @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-medium">Domain <span class="text-danger">*</span></label>
-                <input type="text" name="domain" id="domain"
-                    class="form-control @error('domain') is-invalid @enderror"
-                    value="{{ old('domain', $domain->domain) }}" placeholder="contoh: domain.com">
-                <div id="domain-hint" class="form-text"></div>
+                <label class="form-label fw-medium">Target URL <span class="text-danger">*</span></label>
+                <input type="url" name="target_url" id="target_url"
+                       class="form-control @error('target_url') is-invalid @enderror"
+                       value="{{ old('target_url', $domain->target_url) }}"
+                       oninput="previewDomain(this.value)">
+                <div id="domain-preview" class="form-text"></div>
                 @if($domain->logs()->exists())
-                    <div class="form-text text-warning">
+                    <div class="form-text text-warning mt-1">
                         <i class="bi bi-exclamation-triangle me-1"></i>
-                        Domain ini sudah punya log. Mengubahnya bisa menyebabkan webhook baru tidak terdeteksi jika nilai di transaksi belum diperbarui.
+                        Domain ini sudah punya log. Mengubah URL akan mengupdate domain identifier secara otomatis.
                     </div>
                 @endif
-                @error('domain') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-medium">Target URL <span class="text-danger">*</span></label>
-                <input type="url" name="target_url" class="form-control @error('target_url') is-invalid @enderror"
-                       value="{{ old('target_url', $domain->target_url) }}">
                 @error('target_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-medium">Secret Key <span class="text-danger">*</span></label>
-                <input type="text" name="secret_key" id="secret_key"
-                       class="form-control @error('secret_key') is-invalid @enderror"
-                       value="{{ old('secret_key', $domain->secret_key) }}">
-                <div id="secret-hint" class="form-text"></div>
-                @error('secret_key') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
             <div class="mb-4 form-check">
@@ -76,27 +53,21 @@
 </div>
 
 <script>
-const hints = {
-    midtrans: {
-        domain: 'Isi nilai ini di <code>custom_field1</code> saat membuat transaksi Midtrans.',
-        secret: 'Server Key Midtrans — dipakai untuk validasi signature webhook.',
-        secretPlaceholder: 'SB-Mid-server-xxxxxxxxxxxxxxxx',
-    },
-    xendit: {
-        domain: 'Isi nilai ini di <code>metadata.domain</code> saat membuat transaksi Xendit.',
-        secret: 'Callback Token Xendit — ada di Settings → Developers → Webhook.',
-        secretPlaceholder: 'xnd_xxxxxxxxxxxxxxxx',
-    },
-};
-
-function onProviderChange(val) {
-    document.getElementById('domain-hint').innerHTML = hints[val].domain;
-    document.getElementById('secret-hint').innerHTML = hints[val].secret;
-    document.getElementById('secret_key').placeholder = hints[val].secretPlaceholder;
+function previewDomain(url) {
+    const preview = document.getElementById('domain-preview');
+    try {
+        const parsed = new URL(url);
+        preview.innerHTML = `Domain terdeteksi: <strong>${parsed.hostname}</strong>`;
+        preview.className = 'form-text text-success';
+    } catch {
+        preview.innerHTML = '';
+        preview.className = 'form-text';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    onProviderChange(document.getElementById('provider').value);
+    const url = document.getElementById('target_url').value;
+    if (url) previewDomain(url);
 });
 </script>
 @endsection
