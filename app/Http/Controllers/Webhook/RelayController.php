@@ -5,16 +5,12 @@ namespace App\Http\Controllers\Webhook;
 use App\Http\Controllers\Controller;
 use App\Models\Domain;
 use App\Models\WebhookLog;
-use App\Services\MidtransVerifier;
 use App\Services\WebhookForwarder;
-use App\Services\XenditVerifier;
 use Illuminate\Http\Request;
 
 class RelayController extends Controller
 {
     public function __construct(
-        protected MidtransVerifier $midtrans,
-        protected XenditVerifier   $xendit,
         protected WebhookForwarder $forwarder,
     ) {}
 
@@ -38,27 +34,17 @@ class RelayController extends Controller
                 'payload'       => $payload,
                 'status'        => 'domain_not_found',
             ]);
-            return response()->json(['message' => 'Domain not found'], 404);
+            return response()->json(['message' => 'OK'], 200);
         }
 
-        $valid = match ($provider) {
-            'midtrans' => $this->midtrans->verify($payload, $domain),
-            'xendit'   => $this->xendit->verify($request, $domain),
-        };
+        // Kumpulkan header asli yang relevan untuk diteruskan
+        $forwardHeaders = array_filter([
+            'X-CALLBACK-TOKEN'        => $request->header('X-CALLBACK-TOKEN'),
+            'X-Midtrans-Signature'    => $request->header('X-Midtrans-Signature'),
+            'X-Midtrans-Event'        => $request->header('X-Midtrans-Event'),
+        ]);
 
-        if (!$valid) {
-            WebhookLog::create([
-                'domain_id'     => $domain->id,
-                'provider'      => $provider,
-                'event_type'    => $this->extractEventType($payload, $provider),
-                'custom_field1' => $slug,
-                'payload'       => $payload,
-                'status'        => 'invalid_signature',
-            ]);
-            return response()->json(['message' => 'Invalid signature'], 401);
-        }
-
-        $result = $this->forwarder->forward($domain, $payload);
+        $result = $this->forwarder->forward($domain, $payload, $forwardHeaders);
 
         WebhookLog::create([
             'domain_id'     => $domain->id,
@@ -72,7 +58,7 @@ class RelayController extends Controller
             'error_message' => $result['error_message'],
         ]);
 
-        return response()->json(['message' => 'Forwarded'], 200);
+        return response()->json(['message' => 'OK'], 200);
     }
 
     private function detectProvider(Request $request): string
@@ -89,20 +75,20 @@ class RelayController extends Controller
 
         return match ($provider) {
             'midtrans' => $payload['custom_field1'] ?? null,
-            'xendit'   => $payload['data']['metadata']['domain']  // Payment Request V2/V3 ✓
-                        ?? $payload['metadata']['domain']        // QRIS lama
-                        ?? $this->parseFromExternalId($payload)  // FVA lama fallback
-                        ?? null,
+            'xendit'   => $payload['data']['metadata']['domain']
+                          ?? $payload['metadata']['domain']
+                          ?? $this->parseFromExternalId($payload)
+                          ?? null,
         };
     }
 
     private function parseFromExternalId(array $payload): ?string
     {
         $externalId = $payload['data']['reference_id']
-                    ?? $payload['data']['external_id']
-                    ?? $payload['reference_id']
-                    ?? $payload['external_id']
-                    ?? null;
+                      ?? $payload['data']['external_id']
+                      ?? $payload['reference_id']
+                      ?? $payload['external_id']
+                      ?? null;
 
         if (!$externalId || !str_contains($externalId, '|')) {
             return null;
@@ -115,8 +101,9 @@ class RelayController extends Controller
     {
         return match ($provider) {
             'midtrans' => $payload['transaction_status'] ?? null,
-            'xendit'   => $payload['event']                        // Payment Request format
-                        ?? $payload['data']['status']             ?? null,
+            'xendit'   => $payload['event']
+                          ?? $payload['data']['status']
+                          ?? null,
         };
     }
 }

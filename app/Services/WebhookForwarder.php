@@ -7,12 +7,16 @@ use Illuminate\Support\Facades\Http;
 
 class WebhookForwarder
 {
-    public function forward(Domain $domain, array $payload): array
+    public function forward(Domain $domain, array $payload, array $headers = []): array
     {
         $start = microtime(true);
 
         try {
             $response = Http::timeout(10)
+                ->withHeaders(array_merge([
+                    'Content-Type'   => 'application/json',
+                    'X-Forwarded-By' => 'webhook-relay',
+                ], $headers))
                 ->post($domain->target_url, $payload);
 
             return [
