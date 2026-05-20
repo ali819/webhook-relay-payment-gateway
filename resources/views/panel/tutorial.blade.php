@@ -99,8 +99,7 @@
     ],
     'custom_field1' => 'example.com', // ← domain identifier
 ];</code></pre>
-                <p class="small text-muted mb-2">Secret key yang diisi di panel adalah <strong>Server Key</strong> Midtrans kamu. Bisa ditemukan di:</p>
-                <p class="small mb-0"><i class="bi bi-arrow-right me-1"></i>Dashboard Midtrans → Settings → Access Keys → <strong>Server Key</strong></p>
+
             </div>
         </div>
     </div>
@@ -121,8 +120,7 @@
         'domain' => 'example.com', // ← domain identifier
     ],
 ];</code></pre>
-                <p class="small text-muted mb-2">Secret key yang diisi di panel adalah <strong>Webhook Token</strong> Xendit kamu. Bisa ditemukan di:</p>
-                <p class="small mb-0"><i class="bi bi-arrow-right me-1"></i>Dashboard Xendit → Settings → Developers → <strong>Webhook Token</strong></p>
+
             </div>
         </div>
     </div>

@@ -16,6 +16,11 @@ class RelayController extends Controller
 
     public function handle(Request $request)
     {
+        // NOTE: Relay ini TIDAK melakukan verifikasi signature.
+        // Verifikasi dilakukan oleh app tujuan masing-masing.
+        // MidtransVerifier & XenditVerifier tersedia di app/Services/
+        // tapi sengaja tidak dipakai di sini.
+
         $payload  = $request->all();
         $provider = $this->detectProvider($request);
         $slug     = $this->extractDomainSlug($request, $provider);

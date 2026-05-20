@@ -6,6 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\Domain;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * NOTE: Verifier ini TIDAK digunakan oleh relay.
+ * Disediakan sebagai referensi atau jika suatu saat
+ * relay perlu diaktifkan verifikasinya.
+ * Verifikasi dilakukan oleh app tujuan (target_url).
+ */
 class XenditVerifier
 {
     public function verify(Request $request, Domain $domain): bool

@@ -34,7 +34,6 @@ Layanan perantara yang meneruskan notifikasi pembayaran dari payment gateway (Mi
 ## Fitur
 
 - **Multi-app, satu akun PG** — satu akun Midtrans/Xendit bisa dipakai banyak aplikasi
-- **Verifikasi signature otomatis** — Midtrans (SHA512) & Xendit (X-CALLBACK-TOKEN)
 - **Log terpusat** — pantau semua webhook dari semua aplikasi di satu tempat
 - **Detail log** — lihat full payload JSON dan response dari target URL
 - **Retry manual** — kirim ulang webhook yang gagal langsung dari panel
@@ -59,10 +58,9 @@ Midtrans/Xendit
 │                             │
 │  1. Baca custom_field1 /    │
 │     metadata.domain         │
-│  2. Cari domain di DB       │
-│  3. Validasi signature      │
-│  4. Forward ke target URL   │
-│  5. Catat log               │
+│  2. Cari domain di DB       │    │
+│  3. Forward ke target URL   │
+│  4. Catat log               │
 └─────────────────────────────┘
       │
       ├──▶ App Laravel A (shop-a.com)
@@ -181,9 +179,6 @@ $params = [
 ];
 ```
 
-Secret key yang diisi di panel adalah **Server Key** Midtrans.
-Lokasi: Dashboard Midtrans → Settings → Access Keys → **Server Key**
-
 ---
 
 ### Xendit
@@ -206,9 +201,6 @@ $params = [
 ];
 ```
 
-Secret key yang diisi di panel adalah **Webhook Token** Xendit.
-Lokasi: Dashboard Xendit → Settings → Developers → **Webhook Token**
-
 ---
 
 ## Arti status log
@@ -217,7 +209,6 @@ Lokasi: Dashboard Xendit → Settings → Developers → **Webhook Token**
 |--------|------------|--------|
 | `success` | Webhook berhasil diteruskan ke target URL | — |
 | `failed` | Target URL tidak merespons atau mengembalikan error | Cek apakah target URL aktif dan merespons 2xx |
-| `invalid_signature` | Secret key tidak cocok atau payload dimanipulasi | Pastikan secret key di panel sesuai dengan yang di dashboard provider |
 | `domain_not_found` | Domain identifier tidak terdaftar atau nonaktif | Pastikan domain terdaftar di panel dan statusnya aktif |
 
 ---
@@ -226,7 +217,6 @@ Lokasi: Dashboard Xendit → Settings → Developers → **Webhook Token**
 
 - Rate limiting login: 5 percobaan per menit per IP
 - Setiap percobaan login yang melebihi batas dicatat di `storage/logs/laravel.log`
-- Validasi signature per provider sebelum webhook diteruskan
 - Domain yang nonaktif otomatis ditolak
 - Panel bisa dinonaktifkan sepenuhnya via `PANEL_ENABLED=false` tanpa mengganggu relay
 
@@ -238,7 +228,6 @@ Lokasi: Dashboard Xendit → Settings → Developers → **Webhook Token**
 - Jangan ubah domain identifier jika sudah ada transaksi berjalan
 - Target URL harus **dapat diakses publik** (bukan localhost)
 - Target URL harus merespons dengan HTTP **2xx** agar log tercatat sukses
-- Secret key jangan dibagikan ke siapapun
 - Relay tidak menyimpan data kartu atau informasi sensitif pembayaran
 
 ---
