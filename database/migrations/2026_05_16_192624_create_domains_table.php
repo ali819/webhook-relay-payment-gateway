@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('domains', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('domain')->unique();
+            $table->string('domain')->unique(); // bisa 1 domain 2 url beda (update di file migrasi: change_domains_unique_to_composite)
             $table->enum('provider', ['midtrans', 'xendit']);
             $table->string('target_url');
             $table->string('secret_key');

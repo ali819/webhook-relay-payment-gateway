@@ -13,7 +13,7 @@ class DomainController extends Controller
 {
     public function index()
     {
-        $domains = Domain::latest()->paginate(10);
+        $domains = Domain::orderBy('domain')->paginate(10);
         return view('panel.domains.index', compact('domains'));
     }
 
