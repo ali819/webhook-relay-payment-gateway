@@ -66,7 +66,7 @@
                 <h6 class="fw-semibold mb-3"><i class="bi bi-diagram-3 me-2 text-muted"></i>Cara kerja relay</h6>
                 <hr>
                 <ol class="mb-0" style="line-height:2">
-                    <li>Daftarkan domain di panel ini — isi nama, provider, domain identifier, target URL, dan secret key.</li>
+                    <li>Daftarkan domain di panel ini — isi url full & keterangan (opsional: untuk memudahkan aja).</li>
                     <li>Gunakan URL relay berikut sebagai webhook URL di dashboard Midtrans/Xendit:
                         <div class="mt-2 mb-1 d-flex flex-wrap align-items-center gap-2">
                             <code class="bg-light px-3 py-2 rounded text-break" id="relay-url">{{ route('handleApi') }}</code>
@@ -142,8 +142,6 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <ul class="small mb-0" style="line-height:2">
-                            <li>Secret key disimpan terenkripsi — jangan bagikan ke siapapun.</li>
-                            <li>Webhook yang gagal diverifikasi signature-nya akan ditolak dan dicatat sebagai <code>invalid_signature</code>.</li>
                             <li>Domain yang dinonaktifkan tidak akan menerima webhook — status akan <code>domain_not_found</code>.</li>
                             <li>Relay tidak menyimpan data kartu atau informasi sensitif pembayaran.</li>
                         </ul>
@@ -178,11 +176,6 @@
                                 <td><span class="badge bg-danger-subtle text-danger">Gagal</span></td>
                                 <td>Target URL tidak merespons atau error</td>
                                 <td class="d-none d-md-table-cell">Cek apakah target URL aktif dan merespons 2xx</td>
-                            </tr>
-                            <tr>
-                                <td><span class="badge bg-warning-subtle text-warning">Signature invalid</span></td>
-                                <td>Secret key tidak cocok atau payload dimanipulasi</td>
-                                <td class="d-none d-md-table-cell">Pastikan secret key di panel sesuai dengan yang di dashboard provider</td>
                             </tr>
                             <tr>
                                 <td><span class="badge bg-secondary-subtle text-secondary">Domain tidak ditemukan</span></td>
