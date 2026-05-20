@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Domain extends Model
 {
     protected $fillable = [
-        'name', 'domain', 'provider', 'target_url', 'secret_key', 'is_active',
+        'name', 'domain', 'provider', 'target_url', 'secret_key', 'is_active', 'notes'
     ];
 
     protected $casts = [

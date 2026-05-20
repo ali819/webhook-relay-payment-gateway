@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('target_url');
             $table->string('secret_key');
             $table->boolean('is_active')->default(true);
+            // ada kolom notes
             $table->timestamps();
         });
     }

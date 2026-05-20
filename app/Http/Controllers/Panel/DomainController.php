@@ -46,6 +46,7 @@ class DomainController extends Controller
             'target_url' => $request->target_url,
             'secret_key' => '-',
             'is_active'  => $request->has('is_active'),
+            'notes'      => $request->input('notes'),
         ]);
 
         return redirect()->route('panel.domains.index')
@@ -83,6 +84,7 @@ class DomainController extends Controller
             'target_url' => $request->target_url,
             'secret_key' => '-',
             'is_active'  => $request->has('is_active'),
+            'notes'      => $request->input('notes'),
         ]);
 
         return redirect()->route('panel.domains.index')

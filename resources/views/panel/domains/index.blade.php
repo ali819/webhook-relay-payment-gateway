@@ -31,6 +31,7 @@
                 <tr>
                     <th class="ps-3">Nama</th>
                     <th>Provider</th>
+                    <th>Keterangan</th>
                     <th>Target URL</th>
                     <th>Status</th>
                     <th>Log</th>
@@ -44,7 +45,10 @@
                     <td>
                         <span class="badge badge-{{ $domain->provider }}">{{ ucfirst($domain->provider) }}</span>
                     </td>
-                    <td class="text-muted small" style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
+                    <td class="text-muted small">
+                        {{ $domain->notes ?? '-' }}
+                    </td>
+                    <td class="text-muted small" style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
                         {{ $domain->target_url }}
                     </td>
                     <td>

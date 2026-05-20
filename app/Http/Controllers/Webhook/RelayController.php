@@ -25,6 +25,19 @@ class RelayController extends Controller
         $provider = $this->detectProvider($request);
         $slug     = $this->extractDomainSlug($request, $provider);
 
+        // Jika provider tidak dikenali, log dan return OK
+        if ($provider === 'unknown') {
+            WebhookLog::create([
+                'domain_id'     => null,
+                'provider'      => 'unknown',
+                'event_type'    => null,
+                'custom_field1' => null,
+                'payload'       => $payload,
+                'status'        => 'domain_not_found',
+            ]);
+            return response()->json(['message' => 'OK'], 200);
+        }
+
         $domain = Domain::where('domain', $slug)
             ->where('provider', $provider)
             ->where('is_active', true)
@@ -68,10 +81,23 @@ class RelayController extends Controller
 
     private function detectProvider(Request $request): string
     {
+        // Xendit selalu kirim X-CALLBACK-TOKEN
         if ($request->hasHeader('X-CALLBACK-TOKEN')) {
             return 'xendit';
         }
-        return 'midtrans';
+
+        // Midtrans selalu ada signature_key & transaction_status di payload
+        $payload = $request->all();
+        if (isset($payload['signature_key']) && isset($payload['transaction_status'])) {
+            return 'midtrans';
+        }
+
+        // Fallback — coba tebak dari struktur payload
+        if (isset($payload['custom_field1'])) {
+            return 'midtrans';
+        }
+
+        return 'unknown';
     }
 
     private function extractDomainSlug(Request $request, string $provider): ?string

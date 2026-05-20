@@ -37,6 +37,15 @@
                 @error('target_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
+            <div class="mb-3">
+                <label class="form-label fw-medium">Keterangan</label>
+                <input type="text" name="notes"
+                    class="form-control"
+                    value="{{ old('notes', $domain->notes) }}"
+                    placeholder="Contoh: Production, Local Test, Sandbox, dll">
+                <div class="form-text text-muted">Opsional — untuk memudahkan identifikasi</div>
+            </div>
+
             <div class="mb-4 form-check">
                 <input type="checkbox" class="form-check-input" name="is_active" id="is_active"
                        {{ old('is_active', $domain->is_active) ? 'checked' : '' }}>
