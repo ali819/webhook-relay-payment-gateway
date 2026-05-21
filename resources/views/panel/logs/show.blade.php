@@ -128,7 +128,7 @@
                 </div>
                 <pre id="payload-json"
                      class="bg-light rounded p-3 small mb-0"
-                     style="max-height:400px; overflow-y:auto; overflow-x:auto; word-break:break-all; white-space:pre-wrap">{{ json_encode($log->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                     style="max-height:1000px; overflow-y:auto; overflow-x:auto; word-break:break-all; white-space:pre-wrap">{{ json_encode($log->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
             </div>
         </div>
     </div>
