@@ -201,6 +201,10 @@ $params = [
 ];
 ```
 
+Relay mendeteksi `metadata.domain` secara **dinamis** — di mana pun lokasinya dalam payload (`data.metadata`, `qr_code.metadata`, atau top-level `metadata`), semua otomatis terbaca.
+
+> **⚠️ Catatan untuk Xendit Invoice (invoice mode):** pada mode ini `metadata` **tidak ikut disertakan** di payload webhook. Sebagai gantinya, sisipkan domain di awal `external_id` dengan format `domain|invoice` — contoh: `nama-domain-kamu|INV-001`. Relay akan otomatis mem-parsing domain dari bagian sebelum tanda `|`.
+
 ---
 
 ## Arti status log

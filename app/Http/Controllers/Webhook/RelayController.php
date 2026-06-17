@@ -105,12 +105,59 @@ class RelayController extends Controller
         $payload = $request->all();
 
         return match ($provider) {
-            'midtrans' => $payload['custom_field1'] ?? null,
-            'xendit'   => $payload['data']['metadata']['domain']
-                          ?? $payload['metadata']['domain']
+            'midtrans' => $this->findValueByKey($payload, 'custom_field1'),
+            'xendit'   => $this->findMetadataDomain($payload)
                           ?? $this->parseFromExternalId($payload)
                           ?? null,
         };
+    }
+
+    /**
+     * Scan payload secara rekursif untuk menemukan nilai dari sebuah key,
+     * di mana pun lokasinya (top-level maupun nested). Hanya menerima nilai
+     * skalar non-kosong. Mengembalikan kecocokan pertama (depth-first).
+     */
+    private function findValueByKey(array $payload, string $target): ?string
+    {
+        foreach ($payload as $key => $value) {
+            if ($key === $target && is_scalar($value) && (string) $value !== '') {
+                return (string) $value;
+            }
+
+            if (is_array($value)) {
+                $found = $this->findValueByKey($value, $target);
+                if ($found !== null) {
+                    return $found;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Scan payload secara rekursif untuk menemukan domain di dalam "metadata",
+     * di mana pun lokasinya (top-level metadata, data.metadata, qr_code.metadata, dst).
+     * Mengembalikan domain pertama yang valid (non-empty).
+     */
+    private function findMetadataDomain(array $payload): ?string
+    {
+        foreach ($payload as $key => $value) {
+            // Ketemu blok "metadata" yang punya "domain" terisi
+            if ($key === 'metadata' && is_array($value) && !empty($value['domain'])) {
+                return $value['domain'];
+            }
+
+            // Telusuri lebih dalam jika nilainya array
+            if (is_array($value)) {
+                $found = $this->findMetadataDomain($value);
+                if ($found !== null) {
+                    return $found;
+                }
+            }
+        }
+
+        return null;
     }
 
     private function parseFromExternalId(array $payload): ?string

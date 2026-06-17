@@ -112,7 +112,7 @@
                     <span class="badge badge-xendit me-2">Xendit</span>Cara integrasi
                 </h6>
                 <hr>
-                <p class="small text-muted mb-2">Saat membuat transaksi, tambahkan <code>metadata.domain</code> berisi domain identifier yang sudah didaftarkan:</p>
+                <p class="small text-muted mb-2">Saat membuat transaksi, tambahkan <code>metadata.domain</code> berisi domain identifier yang sudah didaftarkan. Relay otomatis mendeteksi <code>metadata.domain</code> di mana pun lokasinya dalam payload (mis. <code>data.metadata</code>, <code>qr_code.metadata</code>, dll):</p>
                 <pre class="bg-light rounded p-3 small mb-3" style="overflow-x:auto"><code>$params = [
     'external_id' => 'INV-001',
     'amount'      => 100000,
@@ -120,6 +120,13 @@
         'domain' => 'example.com', // ← domain identifier
     ],
 ];</code></pre>
+
+                <div class="alert alert-warning small mb-0 py-2 px-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>Catatan untuk Xendit Invoice:</strong> pada <em>invoice mode</em>, <code>metadata</code> tidak ikut disertakan di payload webhook.
+                    Sebagai gantinya, sisipkan domain di awal <code>external_id</code> dengan format <code>domain|invoice</code>
+                    (mis. <code>example.com|INV-001</code>) — relay akan otomatis mem-parsing domain dari sana.
+                </div>
 
             </div>
         </div>
