@@ -249,14 +249,23 @@ Sama seperti Xendit, `additional_info.domain` dicari secara **rekursif** — di 
 
 Cara di atas — `custom_field1`, `metadata.domain`, `additional_info.domain` — selalu diutamakan. Alias ini cadangan untuk produk payment gateway yang tidak mengembalikan metadata di payload webhook-nya.
 
-Setiap domain otomatis mendapat alias **3 karakter kapital** saat didaftarkan (terlihat di kolom *Alias* halaman Domains). Tempelkan di akhir nomor invoice, dipisah tanda hubung:
+Setiap domain otomatis mendapat alias **3 karakter kapital** saat didaftarkan (terlihat di kolom *Alias* halaman Domains).
+
+> **Kalau memakai cara ini, akhiran `-XXX` itu bagian dari nomor invoice kamu — bukan tempelan sesaat.** Nomor invoice dibuat sekali sudah lengkap dengan aliasnya, lalu nilai yang **sama persis** dipakai di semua tempat: tersimpan di database aplikasi, dikirim ke payment gateway, dan tampil ke pelanggan.
 
 ```php
-$invoice = 'INV-08314';
+$alias = 'S8K';   // dari kolom Alias di halaman Domains
 
-// yang dikirim ke payment gateway
-$externalId = $invoice . '-S8K';   // → INV-08314-S8K
+// nomor invoice dibuat sekali, sudah termasuk alias
+$invoice = 'INV-08314-' . $alias;   // INV-08314-S8K
+
+// nilai yang sama dipakai di mana pun:
+$order->invoice_number = $invoice;              // database aplikasi
+$params['order']['invoice_number'] = $invoice;  // payment gateway
+// dan ditampilkan apa adanya ke pelanggan
 ```
+
+**Yang jangan dilakukan:** menyimpan `INV-08314` di database tapi mengirim `INV-08314-S8K` ke payment gateway. Relay meneruskan payload apa adanya, jadi aplikasi akan menerima nomor yang tidak ada di databasenya dan pencocokan pembayaran gagal. Pilih satu bentuk — yang sudah termasuk alias — lalu pakai di semua tempat.
 
 Aturan pembacaannya sengaja ketat supaya tidak salah tangkap:
 
@@ -276,8 +285,6 @@ php artisan domains:backfill-alias
 Alias juga terisi sendiri begitu domain tersebut disimpan lewat panel.
 
 > Alias yang **sudah ada tidak pernah diganti** — baik lewat tombol maupun command. Mengacak alias akan membuat invoice yang sudah beredar dengan alias lama tidak dikenali lagi.
-
-> **⚠️ Aplikasi tujuan menerima nomor invoice lengkap dengan aliasnya** (`INV-08314-S8K`), karena relay meneruskan payload apa adanya. Potong 4 karakter terakhir saat mencocokkan ke database, atau simpan apa adanya — yang penting konsisten.
 
 ---
 

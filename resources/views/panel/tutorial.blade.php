@@ -367,18 +367,29 @@
                     produk payment gateway yang <em>tidak</em> mengembalikan metadata di webhook-nya.
                 </p>
 
+                <div class="alert alert-warning small py-2 px-3 mb-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>Kalau memakai cara ini, akhiran <code>-XXX</code> itu bagian dari nomor invoice
+                    kamu — bukan tempelan sesaat.</strong> Nomor invoice dibuat sekali sudah lengkap dengan
+                    aliasnya, lalu nilai yang <em>sama persis</em> dipakai di semua tempat: tersimpan di
+                    database aplikasi, dikirim ke payment gateway, dan tampil ke pelanggan.
+                </div>
+
                 <div class="row g-3">
                     <div class="col-12 col-lg-7">
                         <p class="small mb-2">
                             Setiap domain yang kamu daftarkan otomatis dapat alias <strong>3 karakter kapital</strong>
-                            (bisa dilihat di kolom <em>Alias</em> halaman Domains). Tempelkan di akhir nomor invoice,
-                            dipisah tanda hubung:
+                            (bisa dilihat di kolom <em>Alias</em> halaman Domains). Bentuk nomor invoicenya begini:
                         </p>
-                        <pre class="bg-light rounded p-3 small mb-2" style="overflow-x:auto"><code>// nomor invoice aplikasi kamu
-$invoice = 'INV-08314';
+                        <pre class="bg-light rounded p-3 small mb-2" style="overflow-x:auto"><code>$alias = 'S8K';   // dari kolom Alias di halaman Domains
 
-// yang dikirim ke payment gateway
-$externalId = $invoice . '-S8K';   // &larr; INV-08314-S8K</code></pre>
+// nomor invoice dibuat sekali, sudah termasuk alias
+$invoice = 'INV-08314-' . $alias;   // INV-08314-S8K
+
+// nilai yang sama dipakai di mana pun:
+$order-&gt;invoice_number = $invoice;  // disimpan di database aplikasi
+$params['order']['invoice_number'] = $invoice;  // dikirim ke payment gateway
+// dan ditampilkan apa adanya ke pelanggan</code></pre>
                         <p class="small text-muted mb-0">
                             Relay mengapitalkan nomor invoice lebih dulu, jadi <code>inv-08314-s8k</code> tetap terbaca.
                         </p>
@@ -398,11 +409,16 @@ $externalId = $invoice . '-S8K';   // &larr; INV-08314-S8K</code></pre>
                     </div>
                 </div>
 
-                <div class="alert alert-warning small mb-0 mt-3 py-2 px-3">
-                    <i class="bi bi-exclamation-triangle me-1"></i>
-                    Aplikasi tujuan menerima nomor invoice <strong>lengkap dengan aliasnya</strong>
-                    (<code>INV-08314-S8K</code>), karena relay meneruskan payload apa adanya. Potong 4 karakter
-                    terakhir saat mencocokkan ke database, atau simpan apa adanya — yang penting konsisten.
+                <div class="border rounded p-3 mt-3">
+                    <div class="fw-medium small mb-2">
+                        <i class="bi bi-x-circle text-danger me-1"></i>Yang jangan dilakukan
+                    </div>
+                    <p class="small text-muted mb-0">
+                        Menyimpan <code>INV-08314</code> di database tapi mengirim <code>INV-08314-S8K</code>
+                        ke payment gateway. Relay meneruskan payload apa adanya, jadi aplikasi kamu akan menerima
+                        nomor yang tidak ada di databasenya — dan pencocokan pembayaran gagal. Pilih satu bentuk,
+                        yang sudah termasuk alias, lalu pakai itu di semua tempat.
+                    </p>
                 </div>
             </div>
         </div>
