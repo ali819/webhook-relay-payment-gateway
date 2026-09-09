@@ -153,7 +153,7 @@ $(function () {
     const STATUS_META = {
         success:           ['bg-success-subtle text-success',     'Sukses'],
         failed:            ['bg-danger-subtle text-danger',       'Gagal'],
-        invalid_signature: ['bg-warning-subtle text-warning',     'Signature invalid'],
+        invalid_signature: ['bg-warning-subtle text-warning-emphasis',     'Signature invalid'],
         domain_not_found:  ['bg-secondary-subtle text-secondary', 'Tidak ditemukan'],
     };
 

@@ -317,4 +317,25 @@ class PanelDataTablesTest extends TestCase
 
         $this->assertMatchesRegularExpression('/^[A-Z0-9]{3}$/', $domain->fresh()->alias);
     }
+
+    public function test_alias_can_be_generated_from_panel_but_never_replaced(): void
+    {
+        $this->actingAsAdmin();
+
+        $domain = $this->makeDomain();
+        $domain->update(['alias' => null]);
+
+        $this->postJson(route('panel.domains.alias', $domain))
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $alias = $domain->fresh()->alias;
+        $this->assertMatchesRegularExpression('/^[A-Z0-9]{3}$/', $alias);
+
+        // Klik kedua kali tidak boleh mengacak alias yang sudah dipakai invoice.
+        $this->postJson(route('panel.domains.alias', $domain))
+            ->assertStatus(422);
+
+        $this->assertSame($alias, $domain->fresh()->alias);
+    }
 }

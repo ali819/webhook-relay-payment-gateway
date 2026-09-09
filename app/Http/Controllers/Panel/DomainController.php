@@ -81,6 +81,7 @@ class DomainController extends Controller
                 'is_active'  => (bool) $d->is_active,
                 'logs_url'   => route('panel.logs.index', ['domain_id' => $d->id]),
                 'test_url'   => route('panel.domains.test', $d),
+                'alias_url'  => route('panel.domains.alias', $d),
             ]),
         ]);
     }
@@ -168,6 +169,33 @@ class DomainController extends Controller
         $domain->delete();
 
         return $this->okResponse($request, 'Domain berhasil dihapus.');
+    }
+
+    /**
+     * Buatkan alias untuk domain yang belum punya.
+     *
+     * Alias yang sudah ada sengaja tidak diganti: invoice yang terlanjur
+     * beredar membawa alias lama, dan mengacaknya akan membuat webhook-nya
+     * tidak dikenali lagi.
+     */
+    public function generateAlias(Request $request, Domain $domain)
+    {
+        if (filled($domain->alias)) {
+            $message = 'Domain ini sudah punya alias (' . $domain->alias . ') dan tidak diganti, '
+                     . 'supaya invoice yang sudah beredar tetap dikenali.';
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $message], 422)
+                : back()->withErrors(['alias' => $message]);
+        }
+
+        $domain->update(['alias' => Domain::generateAlias()]);
+
+        $message = 'Alias ' . $domain->alias . ' dibuat untuk ' . $domain->domain . '.';
+
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'alias' => $domain->alias, 'message' => $message])
+            : back()->with('success', $message);
     }
 
     public function testForm(Domain $domain)

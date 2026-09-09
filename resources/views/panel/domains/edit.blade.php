@@ -35,7 +35,7 @@
                 </div>
                 <div id="domain-preview" class="form-text"></div>
                 @if($domain->logs()->exists())
-                    <div class="form-text text-warning mt-1">
+                    <div class="alert alert-warning small py-2 px-3 mt-2 mb-0">
                         <i class="bi bi-exclamation-triangle me-1"></i>
                         Domain ini sudah punya log. Mengubah URL akan mengupdate domain identifier secara otomatis.
                     </div>

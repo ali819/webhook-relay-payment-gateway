@@ -41,6 +41,8 @@ Route::middleware(['auth', 'panel.enabled'])->prefix('panel')->name('panel.')->g
     Route::get('logs/{log}', [LogController::class, 'show'])->name('logs.show');
     Route::post('logs/{log}/retry', [LogController::class, 'retry'])->name('logs.retry');
 
+    Route::post('domains/{domain}/alias', [DomainController::class, 'generateAlias'])->name('domains.alias');
+
     Route::get('domains/{domain}/test', [DomainController::class, 'testForm'])->name('domains.test');
     Route::post('domains/{domain}/test', [DomainController::class, 'testSend'])->name('domains.test.send');
 

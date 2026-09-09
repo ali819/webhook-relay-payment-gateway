@@ -201,7 +201,7 @@
                         </div>
                     </div>
 
-                    <div class="form-text text-warning mt-2 d-none" id="has-logs-warning">
+                    <div class="alert alert-warning small py-2 px-3 mt-3 mb-0 d-none" id="has-logs-warning">
                         <i class="bi bi-exclamation-triangle me-1"></i>
                         Domain ini sudah punya log. Mengubah URL akan mengupdate domain identifier secara otomatis.
                     </div>
@@ -254,9 +254,11 @@ $(function () {
             { data: 'name', className: 'fw-medium', render: (v) => escapeHtml(v) },
             {
                 data: 'alias', className: 'text-nowrap d-none d-md-table-cell',
-                render: (v) => v
+                render: (v, type, row) => v
                     ? '<code class="bg-light border rounded px-2 py-1">-' + escapeHtml(v) + '</code>'
-                    : '<span class="text-muted small">belum ada</span>',
+                    : '<button class="btn btn-outline-secondary btn-sync-alias" data-url="' + row.alias_url + '" ' +
+                      'title="Buatkan alias untuk domain ini">' +
+                      '<i class="bi bi-arrow-repeat me-1"></i>Buat alias</button>',
             },
             { data: 'provider', render: (v) => providerBadge(v) },
             { data: 'notes', className: 'text-muted small d-none d-lg-table-cell', render: (v) => escapeHtml(v) },
@@ -417,6 +419,21 @@ $(function () {
                 notify(res.message);
             })
             .fail(() => notify('Gagal menghapus domain.', 'error'));
+    });
+
+    // ---- Buat alias untuk domain yang belum punya ----
+    $('#tbl-domains').on('click', '.btn-sync-alias', function () {
+        const btn = $(this).prop('disabled', true);
+
+        $.post(btn.data('url'))
+            .done(function (res) {
+                table.ajax.reload(null, false);
+                notify(res.message);
+            })
+            .fail(function (xhr) {
+                notify(xhr.responseJSON?.message || 'Gagal membuat alias.', 'error');
+                btn.prop('disabled', false);
+            });
     });
 
     // ---- Salin alias ----

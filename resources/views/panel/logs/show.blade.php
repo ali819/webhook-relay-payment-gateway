@@ -58,7 +58,7 @@
                                     $badge = match($log->status) {
                                         'success'            => 'bg-success-subtle text-success',
                                         'failed'             => 'bg-danger-subtle text-danger',
-                                        'invalid_signature'  => 'bg-warning-subtle text-warning',
+                                        'invalid_signature'  => 'bg-warning-subtle text-warning-emphasis',
                                         'domain_not_found'   => 'bg-secondary-subtle text-secondary',
                                         default              => 'bg-light text-muted',
                                     };
