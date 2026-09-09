@@ -352,6 +352,62 @@
         </div>
     </div>
 
+    {{-- Alias invoice (opsional) --}}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-3 p-md-4">
+                <h6 class="fw-semibold mb-3">
+                    <i class="bi bi-tag me-2 text-muted"></i>Alias invoice
+                    <span class="badge bg-secondary-subtle text-secondary ms-2">opsional</span>
+                </h6>
+                <hr>
+                <p class="small text-muted mb-3">
+                    Cara di atas (<code>custom_field1</code> / <code>metadata.domain</code> /
+                    <code>additional_info.domain</code>) selalu lebih diutamakan. Alias ini cadangan untuk
+                    produk payment gateway yang <em>tidak</em> mengembalikan metadata di webhook-nya.
+                </p>
+
+                <div class="row g-3">
+                    <div class="col-12 col-lg-7">
+                        <p class="small mb-2">
+                            Setiap domain yang kamu daftarkan otomatis dapat alias <strong>3 karakter kapital</strong>
+                            (bisa dilihat di kolom <em>Alias</em> halaman Domains). Tempelkan di akhir nomor invoice,
+                            dipisah tanda hubung:
+                        </p>
+                        <pre class="bg-light rounded p-3 small mb-2" style="overflow-x:auto"><code>// nomor invoice aplikasi kamu
+$invoice = 'INV-08314';
+
+// yang dikirim ke payment gateway
+$externalId = $invoice . '-S8K';   // &larr; INV-08314-S8K</code></pre>
+                        <p class="small text-muted mb-0">
+                            Relay mengapitalkan nomor invoice lebih dulu, jadi <code>inv-08314-s8k</code> tetap terbaca.
+                        </p>
+                    </div>
+
+                    <div class="col-12 col-lg-5">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-medium small mb-2">Aturan pembacaan</div>
+                            <ul class="small text-muted mb-0 ps-3" style="line-height:1.9">
+                                <li>Harus ada <strong>tanda hubung</strong> tepat sebelum 3 karakter terakhir.
+                                    <code>INV08314S8K</code> tidak dianggap alias.</li>
+                                <li>Aliasnya harus benar-benar terdaftar. Kalau tidak ada, relay tidak menebak —
+                                    log jadi <em>Tidak ditemukan</em>.</li>
+                                <li>Dipakai paling akhir, hanya kalau identifier resmi tidak ada di payload.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning small mb-0 mt-3 py-2 px-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Aplikasi tujuan menerima nomor invoice <strong>lengkap dengan aliasnya</strong>
+                    (<code>INV-08314-S8K</code>), karena relay meneruskan payload apa adanya. Potong 4 karakter
+                    terakhir saat mencocokkan ke database, atau simpan apa adanya — yang penting konsisten.
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Aturan --}}
     <div class="col-12">
         <div class="card border-0 shadow-sm">

@@ -26,6 +26,7 @@ class DomainController extends Controller
     {
         $sortable = [
             'name'       => 'name',
+            'alias'      => 'alias',
             'provider'   => 'provider',
             'notes'      => 'notes',
             'target_url' => 'target_url',
@@ -46,7 +47,8 @@ class DomainController extends Controller
         $search = trim((string) $request->input('search.value', ''));
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', $search . '%')   // prefix -> index terpakai
+                $q->where('alias', $search)
+                  ->orWhere('name', 'like', $search . '%')   // prefix -> index terpakai
                   ->orWhere('domain', 'like', $search . '%')
                   ->orWhere('target_url', 'like', '%' . $search . '%')
                   ->orWhere('notes', 'like', '%' . $search . '%');
@@ -72,6 +74,7 @@ class DomainController extends Controller
                 'id'         => $d->id,
                 'name'       => $d->name,
                 'domain'     => $d->domain,
+                'alias'      => $d->alias,
                 'provider'   => $d->provider,
                 'notes'      => $d->notes,
                 'target_url' => $d->target_url,
@@ -87,6 +90,8 @@ class DomainController extends Controller
     {
         return response()->json([
             'id'         => $domain->id,
+            'alias'      => $domain->alias,
+            'domain'     => $domain->domain,
             'provider'   => $domain->provider,
             'target_url' => $domain->target_url,
             'notes'      => $domain->notes,
@@ -113,6 +118,7 @@ class DomainController extends Controller
         Domain::create([
             'name'       => $host,
             'domain'     => $host,
+            'alias'      => Domain::generateAlias(),
             'provider'   => $data['provider'],
             'target_url' => $data['target_url'],
             'secret_key' => '-',

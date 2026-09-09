@@ -19,6 +19,7 @@ class DomainFactory extends Factory
         return [
             'name'       => $host,
             'domain'     => $host,
+            'alias'      => Domain::generateAlias(),
             'provider'   => $this->faker->randomElement(Domain::PROVIDERS),
             'target_url' => 'https://' . $host . '/webhook/payment',
             'secret_key' => '-',

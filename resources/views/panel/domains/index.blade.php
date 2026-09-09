@@ -60,6 +60,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>Nama</th>
+                        <th class="d-none d-md-table-cell">Alias</th>
                         <th>Provider</th>
                         <th class="d-none d-lg-table-cell">Keterangan</th>
                         <th class="d-none d-md-table-cell">Target URL</th>
@@ -85,6 +86,32 @@
                     <input type="hidden" name="id" id="f-id">
 
                     {{-- Keterangan gaya FAQ: default tertutup, dibuka per field --}}
+                    <div class="mb-3 d-none" id="alias-box">
+                        <label class="form-label fw-medium d-flex align-items-center gap-2">
+                            Alias invoice
+                            <a class="ms-auto small text-decoration-none text-muted" data-bs-toggle="collapse"
+                               href="#help-alias" role="button" aria-expanded="false" aria-controls="help-alias">
+                                <i class="bi bi-question-circle"></i> Apa ini?
+                            </a>
+                        </label>
+                        <div class="collapse" id="help-alias">
+                            <div class="border rounded bg-light-subtle p-2 mb-2 small text-muted">
+                                Cara <strong>opsional</strong> mengenali tujuan tanpa metadata: tempelkan alias ini
+                                di akhir nomor invoice, dipisah tanda hubung — mis. <code>INV-08314-<span id="alias-sample">XXX</span></code>.
+                                Relay hanya membacanya kalau polanya persis begitu.
+                                Kalau <code>custom_field1</code> / <code>metadata.domain</code> /
+                                <code>additional_info.domain</code> sudah terkirim, alias tidak diperlukan.
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="fm-alias" class="form-control font-monospace" readonly>
+                            <button class="btn btn-outline-secondary" type="button" id="btn-copy-alias" title="Salin alias">
+                                <i class="bi bi-copy"></i>
+                            </button>
+                        </div>
+                        <div class="form-text text-muted">Digenerate otomatis dan tidak bisa diubah.</div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-medium d-flex align-items-center gap-2">
                             Provider <span class="text-danger">*</span>
@@ -225,6 +252,10 @@ $(function () {
         },
         columns: [
             { data: 'name', className: 'fw-medium', render: (v) => escapeHtml(v) },
+            {
+                data: 'alias', className: 'text-nowrap d-none d-md-table-cell',
+                render: (v) => '<code class="bg-light border rounded px-2 py-1">-' + escapeHtml(v) + '</code>',
+            },
             { data: 'provider', render: (v) => providerBadge(v) },
             { data: 'notes', className: 'text-muted small d-none d-lg-table-cell', render: (v) => escapeHtml(v) },
             {
@@ -311,6 +342,7 @@ $(function () {
         $('#fm-is_active').prop('checked', true);
         $('#domain-preview').html('');
         $('#has-logs-warning').addClass('d-none');
+        $('#alias-box').addClass('d-none');   // alias baru ada setelah domain tersimpan
         $('#domainModalTitle').text('Tambah Domain');
         modal.show();
     });
@@ -327,6 +359,9 @@ $(function () {
             $('#fm-notes').val(d.notes || '');
             $('#fm-is_active').prop('checked', d.is_active);
             $('#has-logs-warning').toggleClass('d-none', !d.has_logs);
+            $('#fm-alias').val(d.alias || '');
+            $('#alias-sample').text(d.alias || 'XXX');
+            $('#alias-box').toggleClass('d-none', !d.alias);
             previewDomain(d.target_url);
             $('#domainModalTitle').text('Edit Domain');
             modal.show();
@@ -380,6 +415,14 @@ $(function () {
                 notify(res.message);
             })
             .fail(() => notify('Gagal menghapus domain.', 'error'));
+    });
+
+    // ---- Salin alias ----
+    $('#btn-copy-alias').on('click', function () {
+        const alias = $('#fm-alias').val();
+        if (!alias) return;
+
+        navigator.clipboard?.writeText(alias).then(() => notify('Alias ' + alias + ' disalin.'));
     });
 
     // ---- Copy relay URL ----

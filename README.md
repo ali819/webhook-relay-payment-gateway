@@ -40,6 +40,7 @@ Layanan perantara yang meneruskan notifikasi pembayaran dari payment gateway (Mi
 
 - **Multi-app, satu akun PG** — satu akun Midtrans/Xendit/DOKU bisa dipakai banyak aplikasi
 - **Tiga provider** — Midtrans, Xendit, dan DOKU dalam satu relay
+- **Alias invoice (opsional)** — alias 3 karakter per domain untuk PG yang tidak mengembalikan metadata
 - **Panel realtime** — semua tabel pakai DataTables server-side + AJAX; tambah/ubah/hapus lewat modal tanpa reload halaman
 - **Auto refresh log** — opsional (default mati, pilihannya diingat di browser); saat aktif, daftar log menyegarkan diri tiap 10 detik tanpa kehilangan halaman & filter
 - **Siap data besar** — paging, sorting, pencarian, dan filter dikerjakan di MySQL dengan kolom yang sudah di-index
@@ -244,11 +245,37 @@ Sama seperti Xendit, `additional_info.domain` dicari secara **rekursif** — di 
 
 ---
 
+### Alias invoice (opsional)
+
+Cara di atas — `custom_field1`, `metadata.domain`, `additional_info.domain` — selalu diutamakan. Alias ini cadangan untuk produk payment gateway yang tidak mengembalikan metadata di payload webhook-nya.
+
+Setiap domain otomatis mendapat alias **3 karakter kapital** saat didaftarkan (terlihat di kolom *Alias* halaman Domains). Tempelkan di akhir nomor invoice, dipisah tanda hubung:
+
+```php
+$invoice = 'INV-08314';
+
+// yang dikirim ke payment gateway
+$externalId = $invoice . '-S8K';   // → INV-08314-S8K
+```
+
+Aturan pembacaannya sengaja ketat supaya tidak salah tangkap:
+
+- Harus ada **tanda hubung** tepat sebelum 3 karakter terakhir. `INV08314S8K` tidak dianggap alias.
+- Aliasnya harus benar-benar terdaftar. Kalau tidak ada di tabel domains, relay tidak menebak — log jadi `domain_not_found`.
+- Hanya dipakai kalau identifier resmi tidak ditemukan di payload.
+- Nomor invoice dikapitalkan dulu sebelum dicocokkan, jadi `inv-08314-s8k` tetap terbaca.
+
+> **⚠️ Aplikasi tujuan menerima nomor invoice lengkap dengan aliasnya** (`INV-08314-S8K`), karena relay meneruskan payload apa adanya. Potong 4 karakter terakhir saat mencocokkan ke database, atau simpan apa adanya — yang penting konsisten.
+
+---
+
 ## Panel
 
 ### Domains
 
 Tabel domain memakai DataTables server-side. Pencarian, sorting, paging, dan filter (provider & status aktif) semuanya dikirim ke server — bukan difilter di browser — jadi tetap ringan berapa pun jumlah datanya.
+
+Setiap domain otomatis mendapat **alias 3 karakter** yang tampil di kolom *Alias* (lihat bagian [Alias invoice](#alias-invoice-opsional)).
 
 Tambah, ubah, dan hapus domain dilakukan lewat modal AJAX; tabel langsung menyegarkan diri tanpa reload halaman. Domain identifier diambil otomatis dari host `target_url`, dan kombinasi **domain + provider** harus unik (satu domain boleh punya entri terpisah untuk Midtrans, Xendit, dan DOKU).
 

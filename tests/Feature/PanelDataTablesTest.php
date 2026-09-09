@@ -26,6 +26,7 @@ class PanelDataTablesTest extends TestCase
         return Domain::create([
             'name'       => 'toko-a.com',
             'domain'     => 'toko-a.com',
+            'alias'      => 'S8K',
             'provider'   => $provider,
             'target_url' => 'https://toko-a.com/webhook',
             'secret_key' => '-',
@@ -183,5 +184,106 @@ class PanelDataTablesTest extends TestCase
         $this->assertNull($log->domain_id);
 
         Http::assertNothingSent();
+    }
+
+    public function test_alias_at_end_of_invoice_resolves_the_domain(): void
+    {
+        Http::fake(['*' => Http::response('OK', 200)]);
+
+        $domain = $this->makeDomain();
+
+        $this->withHeaders(['Client-Id' => 'BRN-0001', 'Signature' => 'x'])
+            ->postJson(route('handleApi'), [
+                'order'       => ['invoice_number' => 'INV-08314-S8K'],
+                'transaction' => ['status' => 'SUCCESS'],
+            ])->assertOk();
+
+        $log = WebhookLog::latest('id')->first();
+        $this->assertSame($domain->id, $log->domain_id);
+        $this->assertSame('success', $log->status);
+    }
+
+    public function test_alias_matching_is_case_insensitive(): void
+    {
+        Http::fake(['*' => Http::response('OK', 200)]);
+
+        $domain = $this->makeDomain();
+
+        $this->withHeaders(['Client-Id' => 'BRN-0001', 'Signature' => 'x'])
+            ->postJson(route('handleApi'), [
+                'order'       => ['invoice_number' => 'inv-08314-s8k'],
+                'transaction' => ['status' => 'SUCCESS'],
+            ])->assertOk();
+
+        $this->assertSame($domain->id, WebhookLog::latest('id')->first()->domain_id);
+    }
+
+    public function test_alias_needs_the_dash_separator_and_a_registered_alias(): void
+    {
+        Http::fake(['*' => Http::response('OK', 200)]);
+
+        $this->makeDomain();
+
+        // Tanpa tanda hubung sebelum 3 karakter terakhir -> bukan alias.
+        $this->withHeaders(['Client-Id' => 'BRN-0001', 'Signature' => 'x'])
+            ->postJson(route('handleApi'), [
+                'order'       => ['invoice_number' => 'INV08314S8K'],
+                'transaction' => ['status' => 'SUCCESS'],
+            ])->assertOk();
+
+        $this->assertSame('domain_not_found', WebhookLog::latest('id')->first()->status);
+
+        // Polanya benar tapi aliasnya tidak terdaftar -> tetap tidak ditebak.
+        $this->withHeaders(['Client-Id' => 'BRN-0001', 'Signature' => 'x'])
+            ->postJson(route('handleApi'), [
+                'order'       => ['invoice_number' => 'INV-08314-ZZZ'],
+                'transaction' => ['status' => 'SUCCESS'],
+            ])->assertOk();
+
+        $this->assertSame('domain_not_found', WebhookLog::latest('id')->first()->status);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_metadata_wins_over_alias(): void
+    {
+        Http::fake(['*' => Http::response('OK', 200)]);
+
+        $utama = $this->makeDomain();
+        $utama->update(['alias' => 'AAA']);
+
+        $lain = Domain::create([
+            'name' => 'toko-b.com', 'domain' => 'toko-b.com', 'alias' => 'S8K',
+            'provider' => 'doku', 'target_url' => 'https://toko-b.com/webhook',
+            'secret_key' => '-', 'is_active' => true,
+        ]);
+
+        // invoice memakai alias milik toko-b, tapi additional_info menyebut toko-a
+        $this->withHeaders(['Client-Id' => 'BRN-0001', 'Signature' => 'x'])
+            ->postJson(route('handleApi'), [
+                'order'           => ['invoice_number' => 'INV-1-S8K'],
+                'transaction'     => ['status' => 'SUCCESS'],
+                'additional_info' => ['domain' => 'toko-a.com'],
+            ])->assertOk();
+
+        $this->assertSame($utama->id, WebhookLog::latest('id')->first()->domain_id);
+        $this->assertNotSame($lain->id, WebhookLog::latest('id')->first()->domain_id);
+    }
+
+    public function test_alias_is_generated_and_unique_on_create(): void
+    {
+        $this->actingAsAdmin();
+
+        foreach (['https://a.test/cb', 'https://b.test/cb', 'https://c.test/cb'] as $url) {
+            $this->postJson(route('panel.domains.store'), [
+                'provider' => 'doku', 'target_url' => $url, 'is_active' => 1,
+            ])->assertOk();
+        }
+
+        $aliases = Domain::pluck('alias');
+
+        $this->assertCount(3, $aliases);
+        $this->assertCount(3, $aliases->unique());
+        $aliases->each(fn ($a) => $this->assertMatchesRegularExpression('/^[A-Z0-9]{3}$/', $a));
     }
 }

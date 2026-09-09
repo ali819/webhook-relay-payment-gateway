@@ -119,7 +119,7 @@ class RelayController extends Controller
     {
         $payload = $request->all();
 
-        return match ($provider) {
+        $slug = match ($provider) {
             'midtrans' => $this->findValueByKey($payload, 'custom_field1'),
             'xendit'   => $this->findMetadataDomain($payload),
             // DOKU: domain diambil dari additional_info, di mana pun letaknya.
@@ -127,6 +127,9 @@ class RelayController extends Controller
                           ?? $this->findMetadataDomain($payload),
             default    => null,
         };
+
+        // Jalan terakhir: alias di akhir nomor invoice (cara opsional).
+        return $slug ?? $this->resolveByAlias($payload);
     }
 
     /**
@@ -175,6 +178,43 @@ class RelayController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Cara opsional: domain dikenali dari alias 3 karakter di akhir nomor
+     * invoice, dipisah tanda hubung — mis. "INV-08314-S8K" untuk alias S8K.
+     *
+     * Tanda hubung tepat sebelum 3 karakter terakhir itu wajib: tanpa itu
+     * akhiran apa pun diabaikan, supaya nomor invoice yang kebetulan
+     * berakhiran 3 karakter tidak ikut tertangkap. Alias juga harus benar-benar
+     * terdaftar; kalau tidak ada di tabel domains, hasilnya null (bukan tebakan).
+     */
+    private function resolveByAlias(array $payload): ?string
+    {
+        $invoice = $payload['order']['invoice_number']
+                   ?? $payload['data']['external_id']
+                   ?? $payload['data']['reference_id']
+                   ?? $payload['external_id']
+                   ?? $payload['reference_id']
+                   ?? $payload['order_id']
+                   ?? null;
+
+        if (!is_string($invoice)) {
+            return null;
+        }
+
+        // Alias selalu disimpan kapital. Nomor invoice dari payment gateway
+        // dikapitalkan dulu supaya aplikasi yang menulis alias huruf kecil —
+        // atau PG yang mengubah casing — tetap cocok.
+        $invoice = strtoupper(trim($invoice));
+
+        if (!preg_match('/-([A-Z0-9]{3})$/', $invoice, $m)) {
+            return null;
+        }
+
+        // Kembalikan domain-nya, bukan langsung row: pencocokan provider &
+        // status aktif tetap dikerjakan pemanggil seperti jalur identifier biasa.
+        return Domain::where('alias', $m[1])->value('domain');
     }
 
     /**
