@@ -286,4 +286,35 @@ class PanelDataTablesTest extends TestCase
         $this->assertCount(3, $aliases->unique());
         $aliases->each(fn ($a) => $this->assertMatchesRegularExpression('/^[A-Z0-9]{3}$/', $a));
     }
+
+    public function test_domain_without_alias_still_works_and_can_be_backfilled(): void
+    {
+        Http::fake(['*' => Http::response('OK', 200)]);
+
+        $domain = $this->makeDomain();
+        $domain->update(['alias' => null]);
+
+        // Tanpa alias, jalur identifier resmi tetap jalan seperti biasa.
+        $this->withHeaders(['Client-Id' => 'BRN-0001', 'Signature' => 'x'])
+            ->postJson(route('handleApi'), [
+                'order'           => ['invoice_number' => 'INV-1'],
+                'transaction'     => ['status' => 'SUCCESS'],
+                'additional_info' => ['domain' => 'toko-a.com'],
+            ])->assertOk();
+
+        $this->assertSame($domain->id, WebhookLog::latest('id')->first()->domain_id);
+
+        // Alias kosong tidak boleh ikut tertangkap oleh akhiran apa pun.
+        $this->withHeaders(['Client-Id' => 'BRN-0001', 'Signature' => 'x'])
+            ->postJson(route('handleApi'), [
+                'order'       => ['invoice_number' => 'INV-08314-QQQ'],
+                'transaction' => ['status' => 'SUCCESS'],
+            ])->assertOk();
+
+        $this->assertSame('domain_not_found', WebhookLog::latest('id')->first()->status);
+
+        $this->artisan('domains:backfill-alias')->assertSuccessful();
+
+        $this->assertMatchesRegularExpression('/^[A-Z0-9]{3}$/', $domain->fresh()->alias);
+    }
 }

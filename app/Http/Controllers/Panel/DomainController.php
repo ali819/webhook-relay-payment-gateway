@@ -150,6 +150,9 @@ class DomainController extends Controller
         $domain->update([
             'name'       => $host,
             'domain'     => $host,
+            // Domain lama yang aliasnya kosong (mis. hasil insert manual)
+            // ikut terisi begitu disimpan.
+            'alias'      => $domain->alias ?: Domain::generateAlias(),
             'provider'   => $data['provider'],
             'target_url' => $data['target_url'],
             'secret_key' => '-',

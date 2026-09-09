@@ -254,7 +254,9 @@ $(function () {
             { data: 'name', className: 'fw-medium', render: (v) => escapeHtml(v) },
             {
                 data: 'alias', className: 'text-nowrap d-none d-md-table-cell',
-                render: (v) => '<code class="bg-light border rounded px-2 py-1">-' + escapeHtml(v) + '</code>',
+                render: (v) => v
+                    ? '<code class="bg-light border rounded px-2 py-1">-' + escapeHtml(v) + '</code>'
+                    : '<span class="text-muted small">belum ada</span>',
             },
             { data: 'provider', render: (v) => providerBadge(v) },
             { data: 'notes', className: 'text-muted small d-none d-lg-table-cell', render: (v) => escapeHtml(v) },

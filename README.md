@@ -265,6 +265,14 @@ Aturan pembacaannya sengaja ketat supaya tidak salah tangkap:
 - Hanya dipakai kalau identifier resmi tidak ditemukan di payload.
 - Nomor invoice dikapitalkan dulu sebelum dicocokkan, jadi `inv-08314-s8k` tetap terbaca.
 
+Alias diisi otomatis untuk semua domain yang sudah ada saat migrasi dijalankan. Kalau ada baris yang aliasnya masih kosong (misalnya disisipkan langsung lewat SQL), domain itu tetap berfungsi normal lewat identifier resmi — hanya jalur alias yang tidak tersedia untuknya, dan di panel kolom Alias-nya tertulis *belum ada*. Isi dengan:
+
+```bash
+php artisan domains:backfill-alias
+```
+
+Alias juga terisi sendiri begitu domain tersebut disimpan lewat panel.
+
 > **⚠️ Aplikasi tujuan menerima nomor invoice lengkap dengan aliasnya** (`INV-08314-S8K`), karena relay meneruskan payload apa adanya. Potong 4 karakter terakhir saat mencocokkan ke database, atau simpan apa adanya — yang penting konsisten.
 
 ---
