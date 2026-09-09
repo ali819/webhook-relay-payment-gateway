@@ -20,6 +20,7 @@
                     <option value="">-- Pilih provider dulu --</option>
                     <option value="midtrans" {{ old('provider') == 'midtrans' ? 'selected' : '' }}>Midtrans</option>
                     <option value="xendit"   {{ old('provider') == 'xendit'   ? 'selected' : '' }}>Xendit</option>
+                    <option value="doku"     {{ old('provider') == 'doku'     ? 'selected' : '' }}>DOKU</option>
                 </select>
                 @error('provider') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>

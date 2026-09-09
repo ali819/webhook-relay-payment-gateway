@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,6 +11,11 @@ class LoginController extends Controller
 {
     public function showForm()
     {
+        // Instalasi baru: belum ada admin, jadi yang tampil form pembuatan akun.
+        if (!User::exists()) {
+            return redirect()->route('register');
+        }
+
         return view('auth.login');
     }
 

@@ -2,18 +2,21 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
-     * A basic test example.
+     * Root selalu mengarahkan tamu ke halaman auth (register saat instalasi
+     * masih kosong, login setelah ada admin) — lihat FirstAdminRegistrationTest.
      */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_the_application_redirects_guests_to_auth(): void
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        $response->assertRedirect(route('register'));
     }
 }

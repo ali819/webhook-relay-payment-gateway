@@ -1,98 +1,133 @@
 @extends('layouts.app')
 @section('title', 'Domains')
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
     <div>
         <h5 class="fw-semibold mb-0">Domains</h5>
-        <p class="text-muted small mb-0">Kelola domain & endpoint relay</p>
+        <p class="text-muted small mb-0">Kelola domain &amp; endpoint relay</p>
     </div>
-    <a href="{{ route('panel.domains.create') }}" class="btn btn-dark btn-sm">
+    <button class="btn btn-dark" id="btn-create">
         <i class="bi bi-plus-lg me-1"></i>Tambah Domain
-    </a>
+    </button>
 </div>
 
 {{-- Relay URL info --}}
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body py-3">
         <div class="d-flex flex-wrap align-items-center gap-2">
-            <span class="text-danger">* Catatan : </span><span class="small text-muted">Webhook URL <span class="fst-italic">(daftarkan ini di dashboard Midtrans/Xendit):</span></span>
+            <span class="text-danger">* Catatan : </span>
+            <span class="small text-muted">Webhook URL <span class="fst-italic">(daftarkan ini di dashboard Midtrans/Xendit/DOKU):</span></span>
             <code class="bg-light px-3 py-1 rounded small" id="relay-url">{{ route('handleApi') }}</code>
-            <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="copy-relay-btn" title="Copy relay URL">
+            <button class="btn btn-outline-secondary py-0 px-2" id="copy-relay-btn" title="Copy relay URL">
                 <i class="bi bi-copy" style="font-size:12px"></i>
             </button>
         </div>
     </div>
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th class="ps-3">Nama</th>
-                    <th>Provider</th>
-                    <th>Keterangan</th>
-                    <th>Target URL</th>
-                    <th>Status</th>
-                    <th>Log</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($domains as $domain)
-                <tr>
-                    <td class="ps-3 fw-medium">{{ $domain->name }}</td>
-                    <td>
-                        <span class="badge badge-{{ $domain->provider }}">{{ ucfirst($domain->provider) }}</span>
-                    </td>
-                    <td class="text-muted small">
-                        {{ $domain->notes ?? '-' }}
-                    </td>
-                    <td class="text-muted small" style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">
-                        {{ $domain->target_url }}
-                    </td>
-                    <td>
-                        @if($domain->is_active)
-                            <span class="badge bg-success-subtle text-success">Aktif</span>
-                        @else
-                            <span class="badge bg-secondary-subtle text-secondary">Nonaktif</span>
-                        @endif
-                    </td>
-                    <td>
-                        <a href="{{ route('panel.logs.index', ['domain_id' => $domain->id]) }}"
-                           class="text-muted small text-decoration-none">
-                            <i class="bi bi-journal-text"></i> lihat
-                        </a>
-                    </td>
-                    <td class="text-end pe-3">
-                        <a href="{{ route('panel.domains.edit', $domain) }}" class="btn btn-sm btn-outline-secondary mt-2">Edit</a>
-                        <form action="{{ route('panel.domains.destroy', $domain) }}"
-                            method="POST" class="d-inline"
-                            data-confirm
-                            data-confirm-title="Hapus domain?"
-                            data-confirm-text="Domain {{ $domain->name }} akan dihapus permanen."
-                            data-confirm-btn="Ya, hapus"
-                            data-confirm-icon="warning">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger mt-2">Hapus</button>
-                        </form>
-                        <a href="{{ route('panel.domains.test', $domain) }}" class="btn btn-sm btn-outline-secondary mt-2">Test</a>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-5">
-                        Belum ada domain. <a href="{{ route('panel.domains.create') }}">Tambah sekarang</a>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+{{-- Filter --}}
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Provider</label>
+                <select id="f-provider" class="form-select">
+                    <option value="">Semua</option>
+                    @foreach(\App\Models\Domain::PROVIDERS as $p)
+                        <option value="{{ $p }}">{{ ucfirst($p) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Status</label>
+                <select id="f-active" class="form-select">
+                    <option value="">Semua</option>
+                    <option value="1">Aktif</option>
+                    <option value="0">Nonaktif</option>
+                </select>
+            </div>
+            <div class="col-md-auto">
+                <button class="btn btn-outline-secondary" id="btn-reset">Reset</button>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="mt-3">
-    {{ $domains->links() }}
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle w-100" id="tbl-domains">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nama</th>
+                        <th>Provider</th>
+                        <th class="d-none d-lg-table-cell">Keterangan</th>
+                        <th class="d-none d-md-table-cell">Target URL</th>
+                        <th>Status</th>
+                        <th class="text-end">Aksi</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{-- Modal form (create + edit) --}}
+<div class="modal fade" id="domainModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form id="domain-form" autocomplete="off">
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="modal-title fw-semibold" id="domainModalTitle">Tambah Domain</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="f-id">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Provider <span class="text-danger">*</span></label>
+                        <select name="provider" id="fm-provider" class="form-select">
+                            <option value="">-- Pilih provider --</option>
+                            @foreach(\App\Models\Domain::PROVIDERS as $p)
+                                <option value="{{ $p }}">{{ ucfirst($p) }}</option>
+                            @endforeach
+                        </select>
+                        <div class="invalid-feedback" data-error="provider"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Target URL <span class="text-danger">*</span></label>
+                        <input type="url" name="target_url" id="fm-target_url" class="form-control"
+                               placeholder="https://toko-a.com/webhook/payment">
+                        <div id="domain-preview" class="form-text"></div>
+                        <div class="invalid-feedback" data-error="target_url"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Keterangan</label>
+                        <input type="text" name="notes" id="fm-notes" class="form-control"
+                               placeholder="Contoh: Production, Local Test, Sandbox, dll">
+                        <div class="form-text text-muted">Opsional — untuk memudahkan identifikasi</div>
+                        <div class="invalid-feedback" data-error="notes"></div>
+                    </div>
+
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="is_active" id="fm-is_active" checked>
+                        <label class="form-check-label" for="fm-is_active">Aktif</label>
+                    </div>
+
+                    <div class="form-text text-warning mt-2 d-none" id="has-logs-warning">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        Domain ini sudah punya log. Mengubah URL akan mengupdate domain identifier secara otomatis.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-dark" id="btn-save">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 {{-- Toast notif copy --}}
@@ -106,18 +141,197 @@
         </div>
     </div>
 </div>
+@endsection
 
+@push('scripts')
 <script>
-let toast;
+$(function () {
+    const modalEl = document.getElementById('domainModal');
+    const modal   = new bootstrap.Modal(modalEl);
 
-document.addEventListener('DOMContentLoaded', function () {
-    toast = new bootstrap.Toast(document.getElementById('copyToast'), { delay: 2000 });
+    const table = $('#tbl-domains').DataTable({
+        processing:  true,
+        serverSide:  true,   // paging & filter dikerjakan MySQL, bukan browser
+        deferRender: true,
+        stateSave:   true,
+        pageLength:  10,
+        lengthMenu:  [10, 25, 50, 100],
+        order:       [[0, 'asc']],
+        language:    window.DT_LANG,
+        ajax: {
+            url: '{{ route('panel.domains.data') }}',
+            data: function (d) {
+                d.provider  = $('#f-provider').val();
+                d.is_active = $('#f-active').val();
+            },
+        },
+        columns: [
+            { data: 'name', className: 'fw-medium', render: (v) => escapeHtml(v) },
+            { data: 'provider', render: (v) => providerBadge(v) },
+            { data: 'notes', className: 'text-muted small d-none d-lg-table-cell', render: (v) => escapeHtml(v) },
+            {
+                data: 'target_url', className: 'text-muted small d-none d-md-table-cell',
+                render: (v) => '<span class="d-inline-block text-truncate" style="max-width:280px" title="' +
+                    escapeHtml(v) + '">' + escapeHtml(v) + '</span>',
+            },
+            {
+                data: 'is_active', orderable: true,
+                render: (v) => v
+                    ? '<span class="badge bg-success-subtle text-success">Aktif</span>'
+                    : '<span class="badge bg-secondary-subtle text-secondary">Nonaktif</span>',
+            },
+            {
+                data: null, orderable: false, searchable: false, className: 'text-end text-nowrap',
+                render: function (row) {
+                    // Di layar kecil tombol tampil sebagai ikon saja agar muat.
+                    const label = (icon, text) =>
+                        '<i class="bi ' + icon + ' d-md-none"></i>' +
+                        '<span class="d-none d-md-inline">' + text + '</span>';
 
-    document.getElementById('copy-relay-btn').addEventListener('click', function () {
-        const url = document.getElementById('relay-url').innerText.trim();
+                    return '' +
+                        '<a href="' + row.logs_url + '" class="btn btn-outline-secondary" title="Lihat log">' +
+                            '<i class="bi bi-journal-text"></i></a> ' +
+                        '<button class="btn btn-outline-secondary btn-edit" data-id="' + row.id + '" title="Edit">' +
+                            label('bi-pencil', 'Edit') + '</button> ' +
+                        '<a href="' + row.test_url + '" class="btn btn-outline-secondary" title="Test">' +
+                            label('bi-send', 'Test') + '</a> ' +
+                        '<button class="btn btn-outline-danger btn-delete" data-id="' + row.id + '" ' +
+                            'data-name="' + escapeHtml(row.name) + '" title="Hapus">' +
+                            label('bi-trash', 'Hapus') + '</button>';
+                },
+            },
+        ],
+    });
+
+    $('#f-provider, #f-active').on('change', () => table.ajax.reload());
+    $('#btn-reset').on('click', function () {
+        $('#f-provider, #f-active').val('');
+        table.search('').ajax.reload();
+    });
+
+    // ---- Form helpers ----
+    function clearErrors() {
+        $('#domain-form .is-invalid').removeClass('is-invalid');
+        $('#domain-form [data-error]').text('');
+    }
+
+    function showErrors(errors) {
+        clearErrors();
+        Object.keys(errors || {}).forEach(function (field) {
+            const box = $('#domain-form [data-error="' + field + '"]');
+            box.text(errors[field][0]);
+            box.siblings('.form-control, .form-select').addClass('is-invalid');
+            box.parent().find('.form-control, .form-select').addClass('is-invalid');
+        });
+    }
+
+    function previewDomain(url) {
+        const preview = $('#domain-preview');
+        try {
+            const parsed = new URL(url);
+            preview.html('Domain terdeteksi: <strong>' + escapeHtml(parsed.hostname) + '</strong>')
+                   .attr('class', 'form-text text-success');
+        } catch {
+            preview.html('').attr('class', 'form-text');
+        }
+    }
+
+    $('#fm-target_url').on('input', function () { previewDomain(this.value); });
+
+    // ---- Create ----
+    $('#btn-create').on('click', function () {
+        clearErrors();
+        $('#domain-form')[0].reset();
+        $('#f-id').val('');
+        $('#fm-is_active').prop('checked', true);
+        $('#domain-preview').html('');
+        $('#has-logs-warning').addClass('d-none');
+        $('#domainModalTitle').text('Tambah Domain');
+        modal.show();
+    });
+
+    // ---- Edit ----
+    $('#tbl-domains').on('click', '.btn-edit', function () {
+        const id = $(this).data('id');
+        clearErrors();
+        $.getJSON('{{ url('panel/domains') }}/' + id, function (d) {
+            $('#f-id').val(d.id);
+            $('#fm-provider').val(d.provider);
+            $('#fm-target_url').val(d.target_url);
+            $('#fm-notes').val(d.notes || '');
+            $('#fm-is_active').prop('checked', d.is_active);
+            $('#has-logs-warning').toggleClass('d-none', !d.has_logs);
+            previewDomain(d.target_url);
+            $('#domainModalTitle').text('Edit Domain');
+            modal.show();
+        }).fail(() => notify('Gagal memuat data domain.', 'error'));
+    });
+
+    // ---- Simpan (create / update) ----
+    $('#domain-form').on('submit', function (e) {
+        e.preventDefault();
+        const id  = $('#f-id').val();
+        const url = id ? '{{ url('panel/domains') }}/' + id : '{{ route('panel.domains.store') }}';
+
+        const payload = {
+            _method:    id ? 'PUT' : 'POST',
+            provider:   $('#fm-provider').val(),
+            target_url: $('#fm-target_url').val(),
+            notes:      $('#fm-notes').val(),
+            is_active:  $('#fm-is_active').is(':checked') ? 1 : 0,
+        };
+
+        $('#btn-save').prop('disabled', true);
+
+        $.post(url, payload)
+            .done(function (res) {
+                modal.hide();
+                table.ajax.reload(null, false);
+                notify(res.message);
+            })
+            .fail(function (xhr) {
+                if (xhr.status === 422) showErrors(xhr.responseJSON.errors);
+                else notify('Gagal menyimpan domain.', 'error');
+            })
+            .always(() => $('#btn-save').prop('disabled', false));
+    });
+
+    // ---- Hapus ----
+    $('#tbl-domains').on('click', '.btn-delete', async function () {
+        const id   = $(this).data('id');
+        const name = $(this).data('name');
+
+        const ok = await confirmAction({
+            title: 'Hapus domain?',
+            text:  'Domain ' + name + ' akan dihapus permanen.',
+            btn:   'Ya, hapus',
+        });
+        if (!ok) return;
+
+        $.post('{{ url('panel/domains') }}/' + id, { _method: 'DELETE' })
+            .done(function (res) {
+                table.ajax.reload(null, false);
+                notify(res.message);
+            })
+            .fail(() => notify('Gagal menghapus domain.', 'error'));
+    });
+
+    // ---- Copy relay URL ----
+    const toast = new bootstrap.Toast(document.getElementById('copyToast'), { delay: 2000 });
+
+    $('#copy-relay-btn').on('click', function () {
+        const url = $('#relay-url').text().trim();
+        const btn = this;
+
+        const done = () => {
+            const icon = $(btn).find('i');
+            icon.removeClass('bi-copy').addClass('bi-check-lg');
+            toast.show();
+            setTimeout(() => icon.removeClass('bi-check-lg').addClass('bi-copy'), 2000);
+        };
 
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(url).then(() => showCopied(this));
+            navigator.clipboard.writeText(url).then(done);
         } else {
             const el = document.createElement('textarea');
             el.value = url;
@@ -127,16 +341,9 @@ document.addEventListener('DOMContentLoaded', function () {
             el.select();
             document.execCommand('copy');
             document.body.removeChild(el);
-            showCopied(this);
+            done();
         }
     });
 });
-
-function showCopied(btn) {
-    const icon = btn.querySelector('i');
-    icon.classList.replace('bi-copy', 'bi-check-lg');
-    toast.show();
-    setTimeout(() => icon.classList.replace('bi-check-lg', 'bi-copy'), 2000);
-}
 </script>
-@endsection
+@endpush

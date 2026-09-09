@@ -18,13 +18,13 @@
                 <hr>
                 <p class="mb-3">
                     Webhook Relay PG adalah layanan perantara yang meneruskan notifikasi pembayaran dari payment gateway
-                    (Midtrans & Xendit) ke aplikasi-aplikasi kamu — cukup dengan <strong>satu akun payment gateway</strong>
+                    (Midtrans, Xendit & DOKU) ke aplikasi-aplikasi kamu — cukup dengan <strong>satu akun payment gateway</strong>
                     untuk banyak aplikasi.
                 </p>
                 <p class="mb-3 text-muted small">
-                    Normalnya, setiap aplikasi butuh akun Midtrans/Xendit sendiri-sendiri hanya untuk bisa menerima
+                    Normalnya, setiap aplikasi butuh akun Midtrans/Xendit/DOKU sendiri-sendiri hanya untuk bisa menerima
                     webhook pembayaran. Dengan relay ini, satu akun payment gateway bisa dipakai bersama — relay yang
-                    bertugas memverifikasi dan meneruskan webhook ke masing-masing aplikasi yang tepat secara otomatis.
+                    bertugas mengenali tujuan dan meneruskan webhook ke masing-masing aplikasi yang tepat secara otomatis.
                 </p>
                 <div class="row g-3 mt-1">
                     <div class="col-12 col-md-4">
@@ -40,8 +40,8 @@
                         <div class="d-flex gap-3 align-items-start">
                             <div class="mt-1"><i class="bi bi-shield-check text-muted fs-5"></i></div>
                             <div>
-                                <div class="fw-medium small">Verifikasi signature otomatis</div>
-                                <div class="text-muted small">Setiap webhook diverifikasi keasliannya sebelum diteruskan.</div>
+                                <div class="fw-medium small">Header signature diteruskan</div>
+                                <div class="text-muted small">Header asli tiap provider ikut dikirim, jadi app tujuan tetap bisa memverifikasi sendiri.</div>
                             </div>
                         </div>
                     </div>
@@ -67,16 +67,19 @@
                 <hr>
                 <ol class="mb-0" style="line-height:2">
                     <li>Daftarkan domain di panel ini — isi url full & keterangan (opsional: untuk memudahkan aja).</li>
-                    <li>Gunakan URL relay berikut sebagai webhook URL di dashboard Midtrans/Xendit:
+                    <li>Gunakan URL relay berikut sebagai webhook URL di dashboard Midtrans/Xendit/DOKU:
                         <div class="mt-2 mb-1 d-flex flex-wrap align-items-center gap-2">
                             <code class="bg-light px-3 py-2 rounded text-break" id="relay-url">{{ route('handleApi') }}</code>
-                            <button class="btn btn-sm btn-outline-secondary flex-shrink-0" onclick="copyRelayUrl(this)" title="Copy URL">
+                            <button class="btn btn-outline-secondary flex-shrink-0" onclick="copyRelayUrl(this)" title="Copy URL">
                                 <i class="bi bi-copy" style="font-size:12px"></i>
                             </button>
                         </div>
                     </li>
                     <li>Di setiap pembuatan transaksi di app kamu, sertakan identifier domain sesuai provider.</li>
-                    <li>Relay akan memverifikasi signature lalu meneruskan payload ke target URL yang terdaftar.</li>
+                    <li>Relay mendeteksi provider dari header &amp; bentuk payload, lalu meneruskan payload ke target URL yang terdaftar
+                        beserta header signature aslinya (<code>X-CALLBACK-TOKEN</code>, <code>X-Midtrans-Signature</code>,
+                        <code>Client-Id</code>, <code>Signature</code>, dst).</li>
+                    <li class="text-muted">Relay sendiri <strong>tidak</strong> memverifikasi signature — verifikasi tetap dilakukan aplikasi tujuan.</li>
                     <li>Semua aktivitas tercatat di halaman <a href="{{ route('panel.logs.index') }}">Logs</a>.</li>
                 </ol>
             </div>
@@ -84,7 +87,7 @@
     </div>
 
     {{-- Midtrans --}}
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body p-3 p-md-4">
                 <h6 class="fw-semibold mb-3">
@@ -105,7 +108,7 @@
     </div>
 
     {{-- Xendit --}}
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body p-3 p-md-4">
                 <h6 class="fw-semibold mb-3">
@@ -132,6 +135,36 @@
         </div>
     </div>
 
+    {{-- DOKU --}}
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3 p-md-4">
+                <h6 class="fw-semibold mb-3">
+                    <span class="badge badge-doku me-2">DOKU</span>Cara integrasi
+                </h6>
+                <hr>
+                <p class="small text-muted mb-2">Saat membuat transaksi, tambahkan <code>additional_info.domain</code> berisi domain identifier yang sudah didaftarkan. Sama seperti Xendit, relay mencarinya secara rekursif di mana pun letaknya dalam payload:</p>
+                <pre class="bg-light rounded p-3 small mb-3" style="overflow-x:auto"><code>$params = [
+    'order' => [
+        'invoice_number' => 'INV-001',
+        'amount'         => 100000,
+    ],
+    'additional_info' => [
+        'domain' => 'example.com', // &larr; domain identifier
+    ],
+];</code></pre>
+
+                <div class="alert alert-warning small mb-0 py-2 px-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>Kalau <code>additional_info</code> tidak ikut dikirim balik</strong> oleh produk DOKU yang kamu pakai,
+                    sisipkan domain di awal <code>invoice_number</code> dengan format <code>domain|invoice</code>
+                    (mis. <code>example.com|INV-001</code>) — relay membaca bagian sebelum tanda <code>|</code>.
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     {{-- Aturan --}}
     <div class="col-12">
         <div class="card border-0 shadow-sm">
@@ -141,7 +174,7 @@
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <ul class="small mb-0" style="line-height:2">
-                            <li>Domain identifier harus <strong>unik</strong> dan konsisten di semua transaksi.</li>
+                            <li>Domain identifier harus <strong>unik per provider</strong> dan konsisten di semua transaksi.</li>
                             <li>Jangan ubah domain identifier jika sudah ada transaksi berjalan.</li>
                             <li>Target URL harus <strong>dapat diakses publik</strong> (bukan localhost).</li>
                             <li>Target URL harus merespons dengan HTTP <strong>2xx</strong> agar log tercatat sukses.</li>
@@ -186,7 +219,7 @@
                             </tr>
                             <tr>
                                 <td><span class="badge bg-secondary-subtle text-secondary">Domain tidak ditemukan</span></td>
-                                <td>Nilai <code>custom_field1</code> / <code>metadata.domain</code> tidak terdaftar atau domain nonaktif</td>
+                                <td>Nilai <code>custom_field1</code> / <code>metadata.domain</code> / <code>additional_info.domain</code> tidak terdaftar atau domain nonaktif</td>
                                 <td class="d-none d-md-table-cell">Pastikan domain identifier terdaftar di panel dan statusnya aktif</td>
                             </tr>
                         </tbody>

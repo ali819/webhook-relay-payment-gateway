@@ -18,6 +18,7 @@
                 <select name="provider" id="provider" class="form-select">
                     <option value="midtrans" {{ old('provider', $domain->provider) == 'midtrans' ? 'selected' : '' }}>Midtrans</option>
                     <option value="xendit"   {{ old('provider', $domain->provider) == 'xendit'   ? 'selected' : '' }}>Xendit</option>
+                    <option value="doku"     {{ old('provider', $domain->provider) == 'doku'     ? 'selected' : '' }}>DOKU</option>
                 </select>
             </div>
 

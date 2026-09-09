@@ -106,7 +106,7 @@
                           data-confirm-btn="Ya, kirim ulang"
                           data-confirm-icon="question">
                         @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-dark w-100">
+                        <button type="submit" class="btn btn-outline-dark w-100">
                             <i class="bi bi-arrow-clockwise me-1"></i>Retry sekarang
                         </button>
                     </form>
@@ -122,7 +122,7 @@
             <div class="card-body p-3 p-md-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-semibold mb-0">Payload</h6>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="copyPayload(this)">
+                    <button class="btn btn-outline-secondary" onclick="copyPayload(this)">
                         <i class="bi bi-copy me-1"></i>Copy
                     </button>
                 </div>

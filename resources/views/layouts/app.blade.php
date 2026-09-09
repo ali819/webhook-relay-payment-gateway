@@ -3,14 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Webhook Relay')</title>
-    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    @include('partials.head-assets')
     <style>
         body { background-color: #f8f9fa; }
         .badge-midtrans { background-color: #00b4d8; color: #fff; }
         .badge-xendit { background-color: #4f46e5; color: #fff; }
+        .badge-doku { background-color: #f97316; color: #fff; }
+        .badge-unknown { background-color: #adb5bd; color: #fff; }
+
+        table.dataTable > tbody > tr > td { vertical-align: middle; }
+
+        /* Kontrol bawaan DataTables ikut ukuran normal, bukan versi -sm */
+        .dt-container .form-control-sm,
+        .dt-container .form-select-sm {
+            font-size: 1rem;
+            padding: .375rem .75rem;
+            border-radius: .375rem;
+        }
+        .dt-container .form-select-sm { padding-right: 2.25rem; }
 
         @media (min-width: 768px) {
             .sidebar {
@@ -43,6 +55,7 @@ $menus = [
     ['route' => 'panel.domains.index', 'active' => 'panel.domains.*', 'icon' => 'bi-globe2',       'label' => 'Domains'],
     ['route' => 'panel.logs.index',    'active' => 'panel.logs.*',    'icon' => 'bi-journal-text',  'label' => 'Logs'],
     ['route' => 'panel.tutorial',      'active' => 'panel.tutorial',  'icon' => 'bi-book',          'label' => 'Tutorial'],
+    ['route' => 'panel.account.edit',  'active' => 'panel.account.*', 'icon' => 'bi-person-gear',   'label' => 'Akun'],
 ];
 @endphp
 
@@ -121,38 +134,9 @@ $menus = [
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-document.querySelectorAll('input, select, textarea').forEach(el => {
-    el.setAttribute('autocomplete', 'off');
-});
+@include('partials.js-assets')
 
-// Global SweetAlert confirm — ganti semua onsubmit confirm()
-document.querySelectorAll('form[data-confirm]').forEach(form => {
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const title   = this.dataset.confirmTitle   || 'Yakin?';
-        const text    = this.dataset.confirmText    || 'Tindakan ini tidak bisa dibatalkan.';
-        const btnText = this.dataset.confirmBtn     || 'Ya, lanjutkan';
-        const icon    = this.dataset.confirmIcon    || 'warning';
-
-        Swal.fire({
-            title,
-            text,
-            icon,
-            showCancelButton:    true,
-            confirmButtonText:   btnText,
-            cancelButtonText:    'Batal',
-            confirmButtonColor:  '#212529',
-            cancelButtonColor:   '#6c757d',
-            reverseButtons:      true,
-        }).then(result => {
-            if (result.isConfirmed) this.submit();
-        });
-    });
-});
-</script>
+@stack('scripts')
 
 </body>
 </html>

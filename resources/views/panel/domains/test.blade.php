@@ -49,7 +49,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-semibold mb-0">Payload JSON</h6>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="loadSample()">
+                        <button class="btn btn-outline-secondary" onclick="loadSample()">
                             <i class="bi bi-file-code me-1"></i>Load sample
                         </button>
                     </div>
@@ -95,6 +95,22 @@ const samples = {
         status: "PAID",
         amount: 100000,
         metadata: {
+            domain: "{{ $domain->domain }}"
+        },
+    },
+    doku: {
+        order: {
+            invoice_number: "TEST-{{ time() }}",
+            amount: 100000,
+        },
+        transaction: {
+            status: "SUCCESS",
+            date: "{{ now()->toIso8601String() }}",
+        },
+        service: {
+            id: "VIRTUAL_ACCOUNT",
+        },
+        additional_info: {
             domain: "{{ $domain->domain }}"
         },
     },

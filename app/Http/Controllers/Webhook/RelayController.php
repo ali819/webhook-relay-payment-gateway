@@ -60,6 +60,11 @@ class RelayController extends Controller
             'X-CALLBACK-TOKEN'        => $request->header('X-CALLBACK-TOKEN'),
             'X-Midtrans-Signature'    => $request->header('X-Midtrans-Signature'),
             'X-Midtrans-Event'        => $request->header('X-Midtrans-Event'),
+            // DOKU (Checkout v2) — target app butuh header ini untuk verifikasi signature
+            'Client-Id'               => $request->header('Client-Id'),
+            'Request-Id'              => $request->header('Request-Id'),
+            'Request-Timestamp'       => $request->header('Request-Timestamp'),
+            'Signature'               => $request->header('Signature'),
         ]);
 
         $result = $this->forwarder->forward($domain, $payload, $forwardHeaders);
@@ -86,8 +91,18 @@ class RelayController extends Controller
             return 'xendit';
         }
 
-        // Midtrans selalu ada signature_key & transaction_status di payload
         $payload = $request->all();
+
+        // DOKU kirim header Client-Id + Signature, dan payload berbentuk
+        // { order: {...}, transaction: {...} }
+        if ($request->hasHeader('Client-Id') && $request->hasHeader('Signature')) {
+            return 'doku';
+        }
+        if (isset($payload['order']['invoice_number']) && isset($payload['transaction']['status'])) {
+            return 'doku';
+        }
+
+        // Midtrans selalu ada signature_key & transaction_status di payload
         if (isset($payload['signature_key']) && isset($payload['transaction_status'])) {
             return 'midtrans';
         }
@@ -109,6 +124,13 @@ class RelayController extends Controller
             'xendit'   => $this->findMetadataDomain($payload)
                           ?? $this->parseFromExternalId($payload)
                           ?? null,
+            // DOKU: domain diambil dari additional_info (di mana pun letaknya),
+            // fallback ke prefix "domain|invoice" pada invoice_number.
+            'doku'     => $this->findAdditionalInfoDomain($payload)
+                          ?? $this->findMetadataDomain($payload)
+                          ?? $this->parseFromExternalId($payload)
+                          ?? null,
+            default    => null,
         };
     }
 
@@ -160,9 +182,32 @@ class RelayController extends Controller
         return null;
     }
 
+    /**
+     * Scan payload secara rekursif untuk menemukan domain di dalam
+     * "additional_info" (format DOKU), di mana pun letaknya.
+     */
+    private function findAdditionalInfoDomain(array $payload): ?string
+    {
+        foreach ($payload as $key => $value) {
+            if ($key === 'additional_info' && is_array($value) && !empty($value['domain'])) {
+                return (string) $value['domain'];
+            }
+
+            if (is_array($value)) {
+                $found = $this->findAdditionalInfoDomain($value);
+                if ($found !== null) {
+                    return $found;
+                }
+            }
+        }
+
+        return null;
+    }
+
     private function parseFromExternalId(array $payload): ?string
     {
-        $externalId = $payload['data']['reference_id']
+        $externalId = $payload['order']['invoice_number']
+                      ?? $payload['data']['reference_id']
                       ?? $payload['data']['external_id']
                       ?? $payload['reference_id']
                       ?? $payload['external_id']
@@ -182,6 +227,10 @@ class RelayController extends Controller
             'xendit'   => $payload['event']
                           ?? $payload['data']['status']
                           ?? null,
+            'doku'     => $payload['transaction']['status']
+                          ?? $payload['service']['id']
+                          ?? null,
+            default    => null,
         };
     }
 }
