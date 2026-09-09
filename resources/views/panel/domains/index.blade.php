@@ -84,61 +84,91 @@
                 <div class="modal-body">
                     <input type="hidden" name="id" id="f-id">
 
-                    <div class="alert alert-light border small mb-4">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Yang didaftarkan di sini adalah <strong>endpoint aplikasi kamu</strong> — tempat relay
-                        meneruskan notifikasi pembayaran. Bukan URL relay; URL relay yang didaftarkan ke
-                        dashboard payment gateway hanya satu dan sudah tampil di halaman Domains.
-                    </div>
-
+                    {{-- Keterangan gaya FAQ: default tertutup, dibuka per field --}}
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Provider <span class="text-danger">*</span></label>
+                        <label class="form-label fw-medium d-flex align-items-center gap-2">
+                            Provider <span class="text-danger">*</span>
+                            <a class="ms-auto small text-decoration-none text-muted" data-bs-toggle="collapse"
+                               href="#help-provider" role="button" aria-expanded="false" aria-controls="help-provider">
+                                <i class="bi bi-question-circle"></i> Apa ini?
+                            </a>
+                        </label>
+                        <div class="collapse" id="help-provider">
+                            <div class="border rounded bg-light-subtle p-2 mb-2 small text-muted">
+                                Payment gateway yang mengirim webhook untuk aplikasi ini. Satu domain boleh
+                                didaftarkan ke lebih dari satu provider — buat entri terpisah per provider.
+                            </div>
+                        </div>
                         <select name="provider" id="fm-provider" class="form-select">
                             <option value="">-- Pilih provider --</option>
                             @foreach(\App\Models\Domain::PROVIDERS as $p)
                                 <option value="{{ $p }}">{{ ucfirst($p) }}</option>
                             @endforeach
                         </select>
-                        <div class="form-text text-muted">
-                            Payment gateway yang mengirim webhook untuk aplikasi ini. Satu domain boleh
-                            didaftarkan ke lebih dari satu provider — buat entri terpisah per provider.
-                        </div>
                         <div class="invalid-feedback" data-error="provider"></div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Target URL <span class="text-danger">*</span></label>
+                        <label class="form-label fw-medium d-flex align-items-center gap-2">
+                            Target URL <span class="text-danger">*</span>
+                            <a class="ms-auto small text-decoration-none text-muted" data-bs-toggle="collapse"
+                               href="#help-target" role="button" aria-expanded="false" aria-controls="help-target">
+                                <i class="bi bi-question-circle"></i> Apa ini?
+                            </a>
+                        </label>
+                        <div class="collapse" id="help-target">
+                            <div class="border rounded bg-light-subtle p-2 mb-2 small text-muted">
+                                Yang didaftarkan di sini adalah <strong>endpoint aplikasi kamu</strong> — tempat
+                                relay meneruskan notifikasi pembayaran, bukan URL relay. URL relay hanya satu
+                                dan sudah tampil di halaman Domains.
+                                <span class="d-block mt-2">
+                                    Isi URL lengkap (pakai <code>https://</code>) endpoint yang biasanya kamu
+                                    daftarkan langsung ke dashboard PG. Harus bisa diakses publik dan membalas HTTP 2xx.
+                                </span>
+                                <span class="d-block mt-2">
+                                    Host dari URL ini otomatis dipakai sebagai <strong>domain identifier</strong>,
+                                    yaitu nilai yang kamu kirim di <code>custom_field1</code> /
+                                    <code>metadata.domain</code> / <code>additional_info.domain</code> saat membuat transaksi.
+                                </span>
+                            </div>
+                        </div>
                         <input type="url" name="target_url" id="fm-target_url" class="form-control"
                                placeholder="https://toko-a.com/api/payment/callback">
-                        <div class="form-text text-muted">
-                            URL lengkap (pakai <code>https://</code>) di aplikasi tujuan yang menerima
-                            notifikasi pembayaran — endpoint yang biasanya kamu daftarkan langsung ke
-                            dashboard PG. Harus bisa diakses publik dan membalas HTTP 2xx.
-                            <span class="d-block mt-1">
-                                Host dari URL ini otomatis dipakai sebagai <strong>domain identifier</strong>,
-                                yaitu nilai yang kamu kirim di <code>custom_field1</code> /
-                                <code>metadata.domain</code> / <code>additional_info.domain</code> saat membuat transaksi.
-                            </span>
-                        </div>
                         <div id="domain-preview" class="form-text"></div>
                         <div class="invalid-feedback" data-error="target_url"></div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Keterangan</label>
+                        <label class="form-label fw-medium d-flex align-items-center gap-2">
+                            Keterangan
+                            <a class="ms-auto small text-decoration-none text-muted" data-bs-toggle="collapse"
+                               href="#help-notes" role="button" aria-expanded="false" aria-controls="help-notes">
+                                <i class="bi bi-question-circle"></i> Apa ini?
+                            </a>
+                        </label>
+                        <div class="collapse" id="help-notes">
+                            <div class="border rounded bg-light-subtle p-2 mb-2 small text-muted">
+                                Opsional — label bebas untuk membedakan entri di daftar, mis. Production /
+                                Sandbox. Tidak berpengaruh ke jalannya relay.
+                            </div>
+                        </div>
                         <input type="text" name="notes" id="fm-notes" class="form-control"
                                placeholder="Contoh: Production, Local Test, Sandbox, dll">
-                        <div class="form-text text-muted">
-                            Opsional — label bebas untuk membedakan entri di daftar, mis. Production /
-                            Sandbox. Tidak berpengaruh ke jalannya relay.
-                        </div>
                         <div class="invalid-feedback" data-error="notes"></div>
                     </div>
 
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="is_active" id="fm-is_active" checked>
-                        <label class="form-check-label" for="fm-is_active">Aktif</label>
-                        <div class="form-text text-muted">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="form-check mb-0">
+                            <input type="checkbox" class="form-check-input" name="is_active" id="fm-is_active" checked>
+                            <label class="form-check-label" for="fm-is_active">Aktif</label>
+                        </div>
+                        <a class="ms-auto small text-decoration-none text-muted" data-bs-toggle="collapse"
+                           href="#help-active" role="button" aria-expanded="false" aria-controls="help-active">
+                            <i class="bi bi-question-circle"></i> Apa ini?
+                        </a>
+                    </div>
+                    <div class="collapse" id="help-active">
+                        <div class="border rounded bg-light-subtle p-2 mt-2 small text-muted">
                             Kalau dimatikan, webhook untuk domain ini tidak diteruskan dan tercatat
                             sebagai <em>Tidak ditemukan</em> di Logs.
                         </div>
@@ -243,6 +273,12 @@ $(function () {
         $('#domain-form [data-error]').text('');
     }
 
+    // Keterangan "Apa ini?" selalu kembali tertutup tiap modal dibuka
+    function collapseHelp() {
+        $('#domainModal .collapse').removeClass('show');
+        $('#domainModal [data-bs-toggle="collapse"]').attr('aria-expanded', 'false');
+    }
+
     function showErrors(errors) {
         clearErrors();
         Object.keys(errors || {}).forEach(function (field) {
@@ -269,6 +305,7 @@ $(function () {
     // ---- Create ----
     $('#btn-create').on('click', function () {
         clearErrors();
+        collapseHelp();
         $('#domain-form')[0].reset();
         $('#f-id').val('');
         $('#fm-is_active').prop('checked', true);
@@ -282,6 +319,7 @@ $(function () {
     $('#tbl-domains').on('click', '.btn-edit', function () {
         const id = $(this).data('id');
         clearErrors();
+        collapseHelp();
         $.getJSON('{{ url('panel/domains') }}/' + id, function (d) {
             $('#f-id').val(d.id);
             $('#fm-provider').val(d.provider);
