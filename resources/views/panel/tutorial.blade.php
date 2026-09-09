@@ -313,9 +313,9 @@
 
                 <div class="alert alert-warning small mb-0 py-2 px-3">
                     <i class="bi bi-exclamation-triangle me-1"></i>
-                    <strong>Catatan untuk Xendit Invoice:</strong> pada <em>invoice mode</em>, <code>metadata</code> tidak ikut disertakan di payload webhook.
-                    Sebagai gantinya, sisipkan domain di awal <code>external_id</code> dengan format <code>domain|invoice</code>
-                    (mis. <code>example.com|INV-001</code>) — relay akan otomatis mem-parsing domain dari sana.
+                    <strong>Catatan untuk Xendit Invoice:</strong> pada <em>invoice mode</em>, <code>metadata</code>
+                    tidak ikut disertakan di payload webhook, jadi relay tidak bisa mengenali tujuannya.
+                    Pakai endpoint yang meneruskan <code>metadata</code> (Payment Request, VA, atau QR).
                 </div>
 
             </div>
@@ -343,9 +343,9 @@
 
                 <div class="alert alert-warning small mb-0 py-2 px-3">
                     <i class="bi bi-exclamation-triangle me-1"></i>
-                    <strong>Kalau <code>additional_info</code> tidak ikut dikirim balik</strong> oleh produk DOKU yang kamu pakai,
-                    sisipkan domain di awal <code>invoice_number</code> dengan format <code>domain|invoice</code>
-                    (mis. <code>example.com|INV-001</code>) — relay membaca bagian sebelum tanda <code>|</code>.
+                    Pastikan produk DOKU yang kamu pakai mengembalikan <code>additional_info</code> di payload
+                    webhook-nya. Kalau tidak ikut terkirim, relay tidak bisa mengenali aplikasi tujuannya dan
+                    log akan bernilai <em>Tidak ditemukan</em>.
                 </div>
 
             </div>

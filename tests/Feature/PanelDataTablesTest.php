@@ -165,18 +165,23 @@ class PanelDataTablesTest extends TestCase
             && $req->hasHeader('Client-Id', 'BRN-0001'));
     }
 
-    public function test_doku_domain_falls_back_to_invoice_prefix(): void
+    public function test_webhook_without_domain_identifier_is_not_relayed(): void
     {
         Http::fake(['*' => Http::response('OK', 200)]);
 
         $this->makeDomain();
 
+        // Tanpa additional_info/metadata tidak ada cara mengenali tujuan.
         $this->withHeaders(['Client-Id' => 'BRN-0001', 'Signature' => 'x'])
             ->postJson(route('handleApi'), [
                 'order'       => ['invoice_number' => 'toko-a.com|INV-2'],
                 'transaction' => ['status' => 'SUCCESS'],
             ])->assertOk();
 
-        $this->assertSame('toko-a.com', WebhookLog::latest('id')->first()->custom_field1);
+        $log = WebhookLog::latest('id')->first();
+        $this->assertSame('domain_not_found', $log->status);
+        $this->assertNull($log->domain_id);
+
+        Http::assertNothingSent();
     }
 }

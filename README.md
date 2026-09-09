@@ -212,7 +212,7 @@ $params = [
 
 Relay mendeteksi `metadata.domain` secara **dinamis** — di mana pun lokasinya dalam payload (`data.metadata`, `qr_code.metadata`, atau top-level `metadata`), semua otomatis terbaca.
 
-> **⚠️ Catatan untuk Xendit Invoice (invoice mode):** pada mode ini `metadata` **tidak ikut disertakan** di payload webhook. Sebagai gantinya, sisipkan domain di awal `external_id` dengan format `domain|invoice` — contoh: `nama-domain-kamu|INV-001`. Relay akan otomatis mem-parsing domain dari bagian sebelum tanda `|`.
+> **⚠️ Catatan untuk Xendit Invoice (invoice mode):** pada mode ini `metadata` **tidak ikut disertakan** di payload webhook, sehingga relay tidak punya cara mengenali aplikasi tujuan. Pakai endpoint yang meneruskan `metadata` (Payment Request, VA, atau QR).
 
 ---
 
@@ -238,7 +238,7 @@ $params = [
 
 Sama seperti Xendit, `additional_info.domain` dicari secara **rekursif** — di mana pun letaknya dalam payload.
 
-> **⚠️ Kalau `additional_info` tidak ikut dikirim balik** oleh produk DOKU yang kamu pakai, sisipkan domain di awal `invoice_number` dengan format `domain|invoice` — contoh: `nama-domain-kamu|INV-001`. Relay membaca bagian sebelum tanda `|`.
+> **⚠️ Pastikan produk DOKU yang kamu pakai mengembalikan `additional_info`** di payload webhook. Kalau tidak ikut terkirim, relay tidak bisa mengenali aplikasi tujuan dan log akan bernilai `domain_not_found`.
 
 **Header yang diteruskan.** Relay meneruskan `Client-Id`, `Request-Id`, `Request-Timestamp`, dan `Signature` apa adanya ke target URL, jadi aplikasi tujuan tetap bisa memverifikasi signature DOKU sendiri.
 
@@ -307,7 +307,7 @@ Test memakai database terpisah yang di-set di `phpunit.xml`:
 
 > **Penting:** buat database itu dulu (`CREATE DATABASE webhook_relay_pg_test;`) dan jangan pernah mengarahkannya ke database development. `RefreshDatabase` menjalankan `migrate:fresh`, jadi database yang ditunjuk akan dikosongkan setiap kali test jalan.
 
-Yang dicakup: alur registrasi admin pertama, ganti password, endpoint DataTables (bentuk response, filter, paging), CRUD domain via AJAX, prune log, serta relay webhook DOKU termasuk fallback domain dari `invoice_number`.
+Yang dicakup: alur registrasi admin pertama, ganti password, endpoint DataTables (bentuk response, filter, paging), CRUD domain via AJAX, prune log, serta relay webhook DOKU.
 
 ---
 

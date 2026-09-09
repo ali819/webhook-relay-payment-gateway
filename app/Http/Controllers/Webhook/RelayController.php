@@ -121,15 +121,10 @@ class RelayController extends Controller
 
         return match ($provider) {
             'midtrans' => $this->findValueByKey($payload, 'custom_field1'),
-            'xendit'   => $this->findMetadataDomain($payload)
-                          ?? $this->parseFromExternalId($payload)
-                          ?? null,
-            // DOKU: domain diambil dari additional_info (di mana pun letaknya),
-            // fallback ke prefix "domain|invoice" pada invoice_number.
+            'xendit'   => $this->findMetadataDomain($payload),
+            // DOKU: domain diambil dari additional_info, di mana pun letaknya.
             'doku'     => $this->findAdditionalInfoDomain($payload)
-                          ?? $this->findMetadataDomain($payload)
-                          ?? $this->parseFromExternalId($payload)
-                          ?? null,
+                          ?? $this->findMetadataDomain($payload),
             default    => null,
         };
     }
@@ -202,22 +197,6 @@ class RelayController extends Controller
         }
 
         return null;
-    }
-
-    private function parseFromExternalId(array $payload): ?string
-    {
-        $externalId = $payload['order']['invoice_number']
-                      ?? $payload['data']['reference_id']
-                      ?? $payload['data']['external_id']
-                      ?? $payload['reference_id']
-                      ?? $payload['external_id']
-                      ?? null;
-
-        if (!$externalId || !str_contains($externalId, '|')) {
-            return null;
-        }
-
-        return explode('|', $externalId)[0];
     }
 
     private function extractEventType(array $payload, string $provider): ?string
