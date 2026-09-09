@@ -32,8 +32,13 @@
                     <input type="url" name="target_url" id="target_url"
                            class="form-control @error('target_url') is-invalid @enderror"
                            value="{{ old('target_url') }}"
-                           placeholder="https://toko-a.com/webhook/payment"
+                           placeholder="https://toko-a.com/api/payment/callback"
                            oninput="previewDomain(this.value)">
+                    <div class="form-text text-muted">
+                        URL lengkap endpoint di aplikasi tujuan yang menerima notifikasi pembayaran.
+                        Harus bisa diakses publik dan membalas HTTP 2xx. Host-nya otomatis dipakai
+                        sebagai domain identifier.
+                    </div>
                     <div id="domain-preview" class="form-text"></div>
                     @error('target_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>

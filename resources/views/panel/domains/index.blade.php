@@ -74,7 +74,7 @@
 
 {{-- Modal form (create + edit) --}}
 <div class="modal fade" id="domainModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow">
             <form id="domain-form" autocomplete="off">
                 <div class="modal-header border-0 pb-0">
@@ -84,6 +84,13 @@
                 <div class="modal-body">
                     <input type="hidden" name="id" id="f-id">
 
+                    <div class="alert alert-light border small mb-4">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Yang didaftarkan di sini adalah <strong>endpoint aplikasi kamu</strong> — tempat relay
+                        meneruskan notifikasi pembayaran. Bukan URL relay; URL relay yang didaftarkan ke
+                        dashboard payment gateway hanya satu dan sudah tampil di halaman Domains.
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-medium">Provider <span class="text-danger">*</span></label>
                         <select name="provider" id="fm-provider" class="form-select">
@@ -92,13 +99,27 @@
                                 <option value="{{ $p }}">{{ ucfirst($p) }}</option>
                             @endforeach
                         </select>
+                        <div class="form-text text-muted">
+                            Payment gateway yang mengirim webhook untuk aplikasi ini. Satu domain boleh
+                            didaftarkan ke lebih dari satu provider — buat entri terpisah per provider.
+                        </div>
                         <div class="invalid-feedback" data-error="provider"></div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-medium">Target URL <span class="text-danger">*</span></label>
                         <input type="url" name="target_url" id="fm-target_url" class="form-control"
-                               placeholder="https://toko-a.com/webhook/payment">
+                               placeholder="https://toko-a.com/api/payment/callback">
+                        <div class="form-text text-muted">
+                            URL lengkap (pakai <code>https://</code>) di aplikasi tujuan yang menerima
+                            notifikasi pembayaran — endpoint yang biasanya kamu daftarkan langsung ke
+                            dashboard PG. Harus bisa diakses publik dan membalas HTTP 2xx.
+                            <span class="d-block mt-1">
+                                Host dari URL ini otomatis dipakai sebagai <strong>domain identifier</strong>,
+                                yaitu nilai yang kamu kirim di <code>custom_field1</code> /
+                                <code>metadata.domain</code> / <code>additional_info.domain</code> saat membuat transaksi.
+                            </span>
+                        </div>
                         <div id="domain-preview" class="form-text"></div>
                         <div class="invalid-feedback" data-error="target_url"></div>
                     </div>
@@ -107,13 +128,20 @@
                         <label class="form-label fw-medium">Keterangan</label>
                         <input type="text" name="notes" id="fm-notes" class="form-control"
                                placeholder="Contoh: Production, Local Test, Sandbox, dll">
-                        <div class="form-text text-muted">Opsional — untuk memudahkan identifikasi</div>
+                        <div class="form-text text-muted">
+                            Opsional — label bebas untuk membedakan entri di daftar, mis. Production /
+                            Sandbox. Tidak berpengaruh ke jalannya relay.
+                        </div>
                         <div class="invalid-feedback" data-error="notes"></div>
                     </div>
 
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" name="is_active" id="fm-is_active" checked>
                         <label class="form-check-label" for="fm-is_active">Aktif</label>
+                        <div class="form-text text-muted">
+                            Kalau dimatikan, webhook untuk domain ini tidak diteruskan dan tercatat
+                            sebagai <em>Tidak ditemukan</em> di Logs.
+                        </div>
                     </div>
 
                     <div class="form-text text-warning mt-2 d-none" id="has-logs-warning">

@@ -28,6 +28,11 @@
                        class="form-control @error('target_url') is-invalid @enderror"
                        value="{{ old('target_url', $domain->target_url) }}"
                        oninput="previewDomain(this.value)">
+                <div class="form-text text-muted">
+                    URL lengkap endpoint di aplikasi tujuan yang menerima notifikasi pembayaran.
+                    Harus bisa diakses publik dan membalas HTTP 2xx. Host-nya otomatis dipakai
+                    sebagai domain identifier.
+                </div>
                 <div id="domain-preview" class="form-text"></div>
                 @if($domain->logs()->exists())
                     <div class="form-text text-warning mt-1">

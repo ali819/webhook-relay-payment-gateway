@@ -66,7 +66,37 @@
                 <h6 class="fw-semibold mb-3"><i class="bi bi-diagram-3 me-2 text-muted"></i>Cara kerja relay</h6>
                 <hr>
                 <ol class="mb-0" style="line-height:2">
-                    <li>Daftarkan domain di panel ini — isi url full & keterangan (opsional: untuk memudahkan aja).</li>
+                    <li>
+                        Daftarkan aplikasi tujuan di menu <a href="{{ route('panel.domains.index') }}">Domains</a> &rarr;
+                        <strong>Tambah Domain</strong>.
+                        <div class="small text-muted mt-2 mb-3 ps-1" style="line-height:1.8">
+                            <div class="mb-2">
+                                <strong class="text-body">Provider</strong> — payment gateway yang akan mengirim
+                                webhook untuk aplikasi itu. Kalau satu aplikasi menerima dari dua PG (mis. Midtrans
+                                dan DOKU), buat <em>dua entri</em> dengan target URL masing-masing.
+                            </div>
+                            <div class="mb-2">
+                                <strong class="text-body">Target URL</strong> — URL lengkap endpoint di aplikasi kamu
+                                yang menerima notifikasi pembayaran, mis.
+                                <code>https://toko-a.com/api/midtrans/callback</code>. Inilah endpoint yang
+                                <em>biasanya</em> kamu daftarkan langsung ke dashboard PG; sekarang cukup didaftarkan
+                                di sini. Syaratnya: bisa diakses publik (bukan localhost) dan membalas HTTP 2xx.
+                            </div>
+                            <div class="mb-2">
+                                <strong class="text-body">Domain identifier</strong> — diambil <em>otomatis</em> dari
+                                host target URL (dari contoh di atas: <code>toko-a.com</code>). Nilai inilah yang harus
+                                kamu kirim di setiap transaksi supaya relay tahu webhook-nya milik aplikasi mana.
+                            </div>
+                            <div class="mb-2">
+                                <strong class="text-body">Keterangan</strong> — label bebas (Production, Sandbox, dll)
+                                supaya mudah dibedakan di daftar. Tidak berpengaruh ke jalannya relay.
+                            </div>
+                            <div>
+                                <strong class="text-body">Aktif</strong> — kalau dimatikan, webhook untuk domain itu
+                                ditolak dan tercatat sebagai <em>Tidak ditemukan</em> di Logs.
+                            </div>
+                        </div>
+                    </li>
                     <li>Gunakan URL relay berikut sebagai webhook URL di dashboard Midtrans/Xendit/DOKU:
                         <div class="mt-2 mb-1 d-flex flex-wrap align-items-center gap-2">
                             <code class="bg-light px-3 py-2 rounded text-break" id="relay-url">{{ route('handleApi') }}</code>
@@ -75,7 +105,11 @@
                             </button>
                         </div>
                     </li>
-                    <li>Di setiap pembuatan transaksi di app kamu, sertakan identifier domain sesuai provider.</li>
+                    <li>
+                        Di setiap pembuatan transaksi di app kamu, sertakan domain identifier tadi sesuai
+                        format provider-nya (lihat kartu di bawah): <code>custom_field1</code> untuk Midtrans,
+                        <code>metadata.domain</code> untuk Xendit, <code>additional_info.domain</code> untuk DOKU.
+                    </li>
                     <li>Relay mendeteksi provider dari header &amp; bentuk payload, lalu meneruskan payload ke target URL yang terdaftar
                         beserta header signature aslinya (<code>X-CALLBACK-TOKEN</code>, <code>X-Midtrans-Signature</code>,
                         <code>Client-Id</code>, <code>Signature</code>, dst).</li>
